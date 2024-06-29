@@ -10,10 +10,18 @@ class Wall extends React.Component {
 
 class Square extends React.Component {
 
+  handleClick = () => {
+    if (this.props.player) {
+      this.props.onPlayerClick(this.props.rowIndex, this.props.colIndex);
+    }
+  };
+
   render() {
-    const { isTopMiddle, isBottomMiddle, player, id } = this.props;
+    const { isTopMiddle, isBottomMiddle, player, id, isHighlighted } = this.props;
+    const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
+
     return (
-      <td className='Square' id={id}>
+      <td className={squareClass} id={id} onClick={this.handleClick}>
         {isTopMiddle || isBottomMiddle ? <div className={player} id={player}></div> : null}
       </td>
     );
@@ -30,13 +38,16 @@ class Space extends React.Component {
 
 class Row extends React.Component {
   render(){
-    var { boardSize, rowIndex } = this.props;
+    var { boardSize, rowIndex, onPlayerClick, highlightedSquares } = this.props;
     const row = []; // A row has 9 squares
     const middleIndex = Math.floor(boardSize / 2);
 
     for (let i = 0; i < boardSize; i++) {
       const isTopMiddle = rowIndex === 0 && i === middleIndex;
-      const isBottomMiddle = rowIndex === boardSize - 1 && i === middleIndex;
+      const isBottomMiddle = rowIndex === boardSize-1 && i === middleIndex;
+      const isHighlighted = highlightedSquares.some(
+        (square) => square.row === rowIndex && square.col === i
+      );
 
       let playerClass = '';
       if(isTopMiddle){
@@ -45,12 +56,16 @@ class Row extends React.Component {
         playerClass = "player2";
       }
       row.push(
-        <Square 
-          key={`square-${rowIndex}-${i}`} 
-          id={`square-${rowIndex}-${i}`} 
+        <Square
+          key={`square-${rowIndex}-${i}`}
+          id={`square-${rowIndex}-${i}`}
+          rowIndex={rowIndex}
+          colIndex={i}
           isTopMiddle={isTopMiddle}
           isBottomMiddle={isBottomMiddle}
           player={playerClass}
+          isHighlighted={isHighlighted}
+          onPlayerClick={onPlayerClick}
         />
       );  
 
@@ -60,7 +75,9 @@ class Row extends React.Component {
     }
     
       return (
-        <tr key={`row-${rowIndex}`} id={`row-${rowIndex}`}>{row}</tr>
+        <tr key={`row-${rowIndex}`} id={`row-${rowIndex}`}>
+          {row}
+        </tr>
       );
   }
 }
@@ -84,12 +101,39 @@ class HorizontalWallRow extends React.Component {
 }
 
 class Board extends React.Component {
+  
+  state = {
+    highlightedSquares: []
+  };
+
+  handlePlayerClick = (rowIndex, colIndex) => {
+    const newHighlightedSquares = [];
+    const boardSize = 9;
+
+    if (rowIndex > 0) newHighlightedSquares.push({ row: rowIndex - 1, col: colIndex }); // up
+    if (rowIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex + 1, col: colIndex }); // down
+    if (colIndex > 0) newHighlightedSquares.push({ row: rowIndex, col: colIndex - 1 }); // left
+    if (colIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex, col: colIndex + 1 }); // right
+
+    this.setState({ highlightedSquares: newHighlightedSquares });
+  };
+
   render() {
     const boardSize = 9;
     const rows = [];
+    const { highlightedSquares } = this.state;
 
     for (let i = 0; i < boardSize; i++) {
-      rows.push(<Row key={`row-${i}`} id={`row-${i}`} boardSize={boardSize} rowIndex={i} />);
+      rows.push(
+        <Row
+          key={`row-${i}`}
+          id={`row-${i}`}
+          boardSize={boardSize}
+          rowIndex={i}
+          highlightedSquares={highlightedSquares}
+          onPlayerClick={this.handlePlayerClick}
+        />
+      );      
       if (i !== boardSize-1) {
         rows.push(<HorizontalWallRow key={`hrow-${i}`} id={`hrow-${i}`} rowIndex={i}/>);
       }

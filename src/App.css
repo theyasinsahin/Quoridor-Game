@@ -13,8 +13,11 @@
   height: 60px;
   width: 60px;
   background-color: aqua;
-  position: relative; /* Yeni eklenen kısım */
+  position: relative;
+}
 
+.Square.highlighted {
+  background-color: pink;
 }
 
 .Wall.horizontal {
