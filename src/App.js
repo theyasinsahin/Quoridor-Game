@@ -11,15 +11,23 @@ class Wall extends React.Component {
 class Square extends React.Component {
 
   handleClick = () => {
-    if (this.props.player) {
-      this.props.onPlayerClick(this.props.rowIndex, this.props.colIndex);
+    const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick} = this.props;
+
+    if (player) {
+      onPlayerClick(rowIndex, colIndex);
+    }else if(highlightedSquares.length > 0){
+      for (let i = 0; i < highlightedSquares.length; i++) {
+        if(highlightedSquares[i].col === colIndex && highlightedSquares[i].row === rowIndex){
+          // HighlightedSquares'e tıklayınca olacak şey
+        }
+      }
     }
   };
 
   render() {
     const { isTopMiddle, isBottomMiddle, player, id, isHighlighted } = this.props;
     const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
-
+    
     return (
       <td className={squareClass} id={id} onClick={this.handleClick}>
         {isTopMiddle || isBottomMiddle ? <div className={player} id={player}></div> : null}
@@ -39,7 +47,7 @@ class Space extends React.Component {
 class Row extends React.Component {
   render(){
     var { boardSize, rowIndex, onPlayerClick, highlightedSquares } = this.props;
-    const row = []; // A row has 9 squares
+    const row = [];
     const middleIndex = Math.floor(boardSize / 2);
 
     for (let i = 0; i < boardSize; i++) {
@@ -66,6 +74,7 @@ class Row extends React.Component {
           player={playerClass}
           isHighlighted={isHighlighted}
           onPlayerClick={onPlayerClick}
+          highlightedSquares={highlightedSquares}
         />
       );  
 
@@ -109,7 +118,7 @@ class Board extends React.Component {
   handlePlayerClick = (rowIndex, colIndex) => {
     const newHighlightedSquares = [];
     const boardSize = 9;
-
+    
     if (rowIndex > 0) newHighlightedSquares.push({ row: rowIndex - 1, col: colIndex }); // up
     if (rowIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex + 1, col: colIndex }); // down
     if (colIndex > 0) newHighlightedSquares.push({ row: rowIndex, col: colIndex - 1 }); // left
