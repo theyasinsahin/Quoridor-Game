@@ -11,14 +11,14 @@ class Wall extends React.Component {
 class Square extends React.Component {
 
   handleClick = () => {
-    const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick} = this.props;
+    const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick, movePlayer} = this.props;
 
     if (player) {
       onPlayerClick(rowIndex, colIndex);
     }else if(highlightedSquares.length > 0){
       for (let i = 0; i < highlightedSquares.length; i++) {
         if(highlightedSquares[i].col === colIndex && highlightedSquares[i].row === rowIndex){
-          // HighlightedSquares'e tıklayınca olacak şey
+          movePlayer(rowIndex, colIndex);
         }
       }
     }
@@ -30,7 +30,7 @@ class Square extends React.Component {
     
     return (
       <td className={squareClass} id={id} onClick={this.handleClick}>
-        {isTopMiddle || isBottomMiddle ? <div className={player} id={player}></div> : null}
+        {player ? <div className={player} id={player}></div> : null}
       </td>
     );
   }
@@ -46,40 +46,33 @@ class Space extends React.Component {
 
 class Row extends React.Component {
   render(){
-    var { boardSize, rowIndex, onPlayerClick, highlightedSquares } = this.props;
+    const { boardSize, rowIndex, onPlayerClick, highlightedSquares, movePlayer, playerPositions } = this.props;
     const row = [];
-    const middleIndex = Math.floor(boardSize / 2);
 
     for (let i = 0; i < boardSize; i++) {
-      const isTopMiddle = rowIndex === 0 && i === middleIndex;
-      const isBottomMiddle = rowIndex === boardSize-1 && i === middleIndex;
+      const playerClass = playerPositions.find(
+        (player) => player.row === rowIndex && player.col === i
+      )?.className || '';
       const isHighlighted = highlightedSquares.some(
         (square) => square.row === rowIndex && square.col === i
       );
 
-      let playerClass = '';
-      if(isTopMiddle){
-        playerClass = "player1";
-      }else if(isBottomMiddle){
-        playerClass = "player2";
-      }
       row.push(
         <Square
           key={`square-${rowIndex}-${i}`}
           id={`square-${rowIndex}-${i}`}
           rowIndex={rowIndex}
           colIndex={i}
-          isTopMiddle={isTopMiddle}
-          isBottomMiddle={isBottomMiddle}
           player={playerClass}
           isHighlighted={isHighlighted}
           onPlayerClick={onPlayerClick}
           highlightedSquares={highlightedSquares}
+          movePlayer={movePlayer}
         />
-      );  
+      );
 
-      if(i!==boardSize-1){
-        row.push(<Wall key={`vwall-${rowIndex}-${i}`} id={`vwall-${rowIndex}-${i}`} orientation="vertical"/>);
+      if (i !== boardSize - 1) {
+        row.push(<Wall key={`vwall-${rowIndex}-${i}`} id={`vwall-${rowIndex}-${i}`} orientation="vertical" />);
       }
     }
     
@@ -112,25 +105,48 @@ class HorizontalWallRow extends React.Component {
 class Board extends React.Component {
   
   state = {
-    highlightedSquares: []
+    highlightedSquares: [],
+    playerPositions: [
+      { row: 0, col: Math.floor(9 / 2), className: 'player2' },
+      { row: 8, col: Math.floor(9 / 2), className: 'player1' },
+    ],
+    currentPlayer:'player1'
   };
 
   handlePlayerClick = (rowIndex, colIndex) => {
-    const newHighlightedSquares = [];
-    const boardSize = 9;
-    
-    if (rowIndex > 0) newHighlightedSquares.push({ row: rowIndex - 1, col: colIndex }); // up
-    if (rowIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex + 1, col: colIndex }); // down
-    if (colIndex > 0) newHighlightedSquares.push({ row: rowIndex, col: colIndex - 1 }); // left
-    if (colIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex, col: colIndex + 1 }); // right
+    const { playerPositions, currentPlayer } = this.state;
+    const currentPlayerPosition = playerPositions.find((player) => player.className === currentPlayer);
 
-    this.setState({ highlightedSquares: newHighlightedSquares });
+    if (currentPlayerPosition.row === rowIndex && currentPlayerPosition.col === colIndex) {
+      const newHighlightedSquares = [];
+      const boardSize = 9;
+
+      if (rowIndex > 0) newHighlightedSquares.push({ row: rowIndex - 1, col: colIndex });
+      if (rowIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex + 1, col: colIndex });
+      if (colIndex > 0) newHighlightedSquares.push({ row: rowIndex, col: colIndex - 1 });
+      if (colIndex < boardSize - 1) newHighlightedSquares.push({ row: rowIndex, col: colIndex + 1 });
+
+      this.setState({ highlightedSquares: newHighlightedSquares });
+    }
   };
+
+  movePlayer = (rowIndex, colIndex) => {
+    const { playerPositions, currentPlayer } = this.state;
+    const newPlayerPositions = playerPositions.map((player) =>
+      player.className === currentPlayer ? { ...player, row: rowIndex, col: colIndex } : player
+    );
+
+    const nextPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+    this.setState({ playerPositions: newPlayerPositions, highlightedSquares: [], currentPlayer: nextPlayer });
+
+    if(currentPlayer === 'player1' && rowIndex===0){alert("Player 1 kazandı");}
+    if(currentPlayer === 'player2' && rowIndex===8){alert("Player 2 kazandı");}
+  };  
 
   render() {
     const boardSize = 9;
     const rows = [];
-    const { highlightedSquares } = this.state;
+    const { highlightedSquares, playerPositions } = this.state;
 
     for (let i = 0; i < boardSize; i++) {
       rows.push(
@@ -141,6 +157,8 @@ class Board extends React.Component {
           rowIndex={i}
           highlightedSquares={highlightedSquares}
           onPlayerClick={this.handlePlayerClick}
+          movePlayer={this.movePlayer}
+          playerPositions={playerPositions}
         />
       );      
       if (i !== boardSize-1) {

@@ -50,10 +50,10 @@
   transform: translate(-50%, -50%);
 }
 
-.player1 {
+.player2 {
   background-color: red;
 }
 
-.player2 {
+.player1 {
   background-color: blue;
 }
