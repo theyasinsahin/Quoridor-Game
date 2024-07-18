@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Space(props) {
+const  Space = (props) => {
   return (
     <td className='Space' id={props.id}></td>
   );

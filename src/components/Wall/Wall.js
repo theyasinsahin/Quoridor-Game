@@ -2,17 +2,24 @@ import React from 'react';
 import '../../App';
 
 
-function Wall(props) {
+const Wall = (props) => {
+    const {orientation, isHovered, isClicked, id} = props;
     const handleMouseEnter = () => {
-        props.onWallHover(props.id, props.orientation, true);
+        props.onWallHover(id, orientation, true);
     };
 
     const handleMouseLeave = () => {
-        props.onWallHover(props.id, props.orientation, false);
+        props.onWallHover(id, orientation, false);
     };
-
-    const className = `Wall ${props.orientation} ${props.isHovered ? 'hovered' : ''} ${props.isClicked ? 'clicked' : ''}`;
-    return <td className={className} id={props.id} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}></td>;
+    
+    const className = `Wall ${orientation} ${isHovered ? 'hovered' : ''} ${isClicked ? 'clicked' : ''}`;
+    return (
+    <td 
+        className={className} 
+        id={id} 
+        onMouseEnter={handleMouseEnter} 
+        onMouseLeave={handleMouseLeave}>
+    </td>);
 }
 
 export default Wall;

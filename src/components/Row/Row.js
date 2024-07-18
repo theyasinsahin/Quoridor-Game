@@ -2,8 +2,17 @@ import React from 'react';
 import Square from '../Square/Square';
 import Wall from '../Wall/Wall';
 
-function Row(props) {
-  const { boardSize, rowIndex, onPlayerClick, highlightedSquares, movePlayer, players, onWallHover, hoveredWalls } = props;
+const Row = (props) => {
+  const { 
+    boardSize, 
+    rowIndex, 
+    onPlayerClick, 
+    highlightedSquares, 
+    movePlayer, 
+    players, 
+    onWallHover, 
+    hoveredWalls,
+  } = props;
   const row = [];
 
   for (let i = 0; i < boardSize; i++) {

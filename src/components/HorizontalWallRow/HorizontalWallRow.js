@@ -2,7 +2,7 @@ import React from 'react';
 import Wall from '../Wall/Wall';
 import Space from '../Space/space';
 
-function HorizontalWallRow(props) {
+const HorizontalWallRow = (props) => {
   const { rowIndex, onWallHover, hoveredWalls } = props;
   const boardSize = 9;
   const row = [];

@@ -3,7 +3,7 @@ import Row from '../Row/Row';
 import HorizontalWallRow from '../HorizontalWallRow/HorizontalWallRow';
 import GameLogic from '../../hooks/gameLogic';
 
-function Board() {
+const Board = () => {
     
     const boardSize = 9;
     const {state, handlePlayerClick, movePlayer, handleWallHover } = GameLogic(boardSize);

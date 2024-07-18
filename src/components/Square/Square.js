@@ -1,9 +1,10 @@
 import React from 'react';
 
-function Square(props) {
-  const handleClick = () => {
-    const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick, movePlayer } = props;
+const Square = (props) => {
+  
+  const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick, movePlayer, id, isHighlighted } = props;
 
+  const handleClick = () => {
     if (player) {
       onPlayerClick(rowIndex, colIndex);
     } else if (highlightedSquares.length > 0) {
@@ -15,7 +16,6 @@ function Square(props) {
     }
   };
 
-  const { player, id, isHighlighted } = props;
   const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
 
   return (
