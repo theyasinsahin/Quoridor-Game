@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 const GameLogic = (boardSize) => {
     const [state, setState] = useState({
@@ -11,6 +12,8 @@ const GameLogic = (boardSize) => {
         hoveredWalls: [],
         clickedWalls: [],
     });
+
+    const navigate = useNavigate();
 
     const bfs = (start, goalRow, boardSize, walls) => {
         const directions = [
@@ -196,11 +199,14 @@ const GameLogic = (boardSize) => {
 
         if (initialPlayer === 'player1' && rowIndex === 0) {
             alert("Player 1 kazandı");
+            navigate('/game-over', { state: {winner: 'Player 1'} });
         }
         if (initialPlayer === 'player2' && rowIndex === 8) {
             alert("Player 2 kazandı");
+            navigate('/game-over', { state: {winner: 'Player 2'} });
         }
     };
+
     const handleWallHover = (id, orientation, isHovering) => {
         const { hoveredWalls, clickedWalls } = state;
         let newHoveredWalls = [...hoveredWalls];
