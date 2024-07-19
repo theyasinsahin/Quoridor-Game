@@ -11,6 +11,11 @@ const Wall = (props) => {
     const handleMouseLeave = () => {
         props.onWallHover(id, orientation, false);
     };
+
+    const handleClick = () => {
+        props.onWallClick(id, orientation);
+    }
+
     
     const className = `Wall ${orientation} ${isHovered ? 'hovered' : ''} ${isClicked ? 'clicked' : ''}`;
     return (
@@ -18,7 +23,9 @@ const Wall = (props) => {
         className={className} 
         id={id} 
         onMouseEnter={handleMouseEnter} 
-        onMouseLeave={handleMouseLeave}>
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}        
+        >
     </td>);
 }
 

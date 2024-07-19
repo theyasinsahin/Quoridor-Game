@@ -11,7 +11,10 @@ const Row = (props) => {
     movePlayer, 
     players, 
     onWallHover, 
+    onWallClick,
     hoveredWalls,
+    clickedWalls,
+    initialPlayer,
   } = props;
   const row = [];
 
@@ -34,6 +37,7 @@ const Row = (props) => {
         onPlayerClick={onPlayerClick}
         highlightedSquares={highlightedSquares}
         movePlayer={movePlayer}
+        initialPlayer={initialPlayer}
       />
     );
 
@@ -45,7 +49,9 @@ const Row = (props) => {
           id={vWallId}
           orientation="vertical"
           onWallHover={onWallHover}
+          onWallClick={onWallClick}
           isHovered={hoveredWalls.includes(vWallId)}
+          isClicked={clickedWalls.includes(vWallId)}
         />
       );
     }

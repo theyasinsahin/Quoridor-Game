@@ -3,7 +3,7 @@ import Wall from '../Wall/Wall';
 import Space from '../Space/space';
 
 const HorizontalWallRow = (props) => {
-  const { rowIndex, onWallHover, hoveredWalls } = props;
+  const { rowIndex, onWallHover, hoveredWalls, onWallClick, clickedWalls } = props;
   const boardSize = 9;
   const row = [];
 
@@ -15,7 +15,9 @@ const HorizontalWallRow = (props) => {
         id={hWallId}
         orientation="horizontal"
         onWallHover={onWallHover}
+        onWallClick={onWallClick}
         isHovered={hoveredWalls.includes(hWallId)}
+        isClicked={clickedWalls.includes(hWallId)}
       />
     );
 

@@ -1,18 +1,19 @@
 import React from 'react';
 import Row from '../Row/Row';
 import HorizontalWallRow from '../HorizontalWallRow/HorizontalWallRow';
+import WallsLeft from '../WallsLeft/WallsLeft';
 import GameLogic from '../../hooks/gameLogic';
 
 const Board = () => {
     
     const boardSize = 9;
-    const {state, handlePlayerClick, movePlayer, handleWallHover } = GameLogic(boardSize);
+    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick } = GameLogic(boardSize);
 
     const rows = [];
 
     const render = () => {
         
-        const {highlightedSquares, players, hoveredWalls} = state;
+        const {highlightedSquares, players, hoveredWalls, clickedWalls, initialPlayer} = state;
     
         for (let i = 0; i < boardSize; i++) {
             rows.push(
@@ -26,7 +27,10 @@ const Board = () => {
                 movePlayer={movePlayer}
                 players={players}
                 onWallHover={handleWallHover}
+                onWallClick={handleWallClick}
                 hoveredWalls={hoveredWalls}
+                clickedWalls={clickedWalls}
+                initialPlayer={initialPlayer}
             />
             );
     
@@ -37,16 +41,25 @@ const Board = () => {
                 id={`hrow-${i}`}
                 rowIndex={i}
                 onWallHover={handleWallHover}
+                onWallClick={handleWallClick}
                 hoveredWalls={hoveredWalls}
+                clickedWalls={clickedWalls}
                 />
             );
             }
         }
     
       return (
-        <table className='Board'>
-          <tbody>{rows}</tbody>
-        </table>
+        <div>
+            <WallsLeft wallsLeft={players.find(player => player.name === 'player2').wallsLeft} player="player2s" />
+            <table className='Board'>
+                <tbody>            
+                  {rows}
+                </tbody>
+            </table>
+            <WallsLeft wallsLeft={players.find(player => player.name === 'player1').wallsLeft} player="player1s" />
+
+        </div>
       );
     }
 

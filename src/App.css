@@ -4,7 +4,12 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
+  margin: 50px;
 }
+.Board {
+  margin: 20px auto;
+}
+
 .Row {
   border: 5px solid black;
 }
@@ -65,3 +70,29 @@
 .player1 {
   background-color: blue;
 }
+
+.player1.turn, .player2.turn{
+  border: 5px solid rgb(255, 255, 255)  ;
+}
+
+.WallsLeft {
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+}
+
+.WallsLeft.player1s {
+  flex-direction: row-reverse;
+}
+
+.WallsLeft.player2s {
+  flex-direction: row;
+}
+
+.remaining-wall {
+  width: 10px;
+  height: 130px;
+  background-color: rgb(0, 0, 0);
+  margin: 15px;
+}
+

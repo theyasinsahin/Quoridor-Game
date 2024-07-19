@@ -2,7 +2,7 @@ import React from 'react';
 
 const Square = (props) => {
   
-  const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick, movePlayer, id, isHighlighted } = props;
+  const { highlightedSquares, colIndex, rowIndex, player, onPlayerClick, movePlayer, id, isHighlighted, initialPlayer } = props;
 
   const handleClick = () => {
     if (player) {
@@ -17,10 +17,10 @@ const Square = (props) => {
   };
 
   const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
-
+  const playerClass = `${player ? player:null} ${(player && initialPlayer === player) ? "turn" : null}`;
   return (
     <td className={squareClass} id={id} onClick={handleClick}>
-      {player ? <div className={player} id={player}></div> : null}
+      {player ? <div className={playerClass} id={player}></div> : null}
     </td>
   );
 }
