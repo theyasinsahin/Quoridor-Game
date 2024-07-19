@@ -195,21 +195,27 @@ const GameLogic = (boardSize) => {
     
 
     const handleWallClick = (id, orientation) => {
-        const { players, clickedWalls } = state;
-        const newClickedWalls = [...clickedWalls, id];
+        const { players, clickedWalls, hoveredWalls } = state;
+        const newClickedWalls = [...clickedWalls];
     
         if (orientation === 'vertical') {
             const parts = id.split('-');
             const row = parseInt(parts[1], 10);
             const col = parseInt(parts[2], 10);
             const belowWall = `vwall-${row + 1}-${col}`;
-            newClickedWalls.push(belowWall);
+            if (hoveredWalls.indexOf(id) !== -1){
+                newClickedWalls.push(id);
+                newClickedWalls.push(belowWall);
+            }else return;
         } else {
             const parts = id.split('-');
             const row = parseInt(parts[1], 10);
             const col = parseInt(parts[2], 10);
             const nextWall = `hwall-${row}-${col + 1}`;
-            newClickedWalls.push(nextWall);
+            if(hoveredWalls.indexOf(id) !== -1){
+                newClickedWalls.push(id);
+                newClickedWalls.push(nextWall);
+            }else return;
         }
     
         const player1Start = players.find(player => player.name === 'player1').position;
