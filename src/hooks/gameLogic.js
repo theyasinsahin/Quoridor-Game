@@ -254,13 +254,16 @@ const GameLogic = (boardSize) => {
     
 
     const handleWallClick = (id, orientation) => {
-        const { players, clickedWalls, hoveredWalls } = state;
+        const { players, clickedWalls, hoveredWalls, initialPlayer } = state;
         const newClickedWalls = [...clickedWalls];
+        
+        const currentPlayer = players.find((player) => player.name === initialPlayer);
 
-        if(players.wallsLeft <= 0){
+        if(currentPlayer.wallsLeft <= 0){
             alert("Yor walls are over! You can only move.");
             return;
         }
+        
         if (orientation === 'vertical') {
             const parts = id.split('-');
             const row = parseInt(parts[1], 10);
