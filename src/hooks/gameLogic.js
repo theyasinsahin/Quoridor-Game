@@ -13,8 +13,10 @@ const GameLogic = (boardSize) => {
         clickedWalls: [],
     });
 
+    ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
 
+    /////////////////  BFS ALGORITHM /////////////////////////
     const bfs = (start, goalRow, boardSize, walls) => {
         const directions = [
             { row: -1, col: 0 }, // up
@@ -50,6 +52,7 @@ const GameLogic = (boardSize) => {
         return false; // no path found
     };
 
+    ////////////// VALID MOVES
     const isWallBlockingMove = (row, col, newRow, newCol) => {
         const {clickedWalls} = state;
         
@@ -94,11 +97,13 @@ const GameLogic = (boardSize) => {
         return true;
     };
 
+
+    //////////////////// CLICK EVENTS //////////////////
     const handlePlayerClick = (rowIndex, colIndex) => {
         const { players, initialPlayer } = state;
     
         const currentPlayer = players.find((player) => player.name === initialPlayer);
-    
+
         if (currentPlayer.position.row === rowIndex && currentPlayer.position.col === colIndex) {
             const newHighlightedSquares = [];
     
@@ -198,59 +203,14 @@ const GameLogic = (boardSize) => {
         }));
 
         if (initialPlayer === 'player1' && rowIndex === 0) {
-            alert("Player 1 kazandı");
             navigate('/game-over', { state: {winner: 'Player 1'} });
         }
         if (initialPlayer === 'player2' && rowIndex === 8) {
-            alert("Player 2 kazandı");
             navigate('/game-over', { state: {winner: 'Player 2'} });
         }
     };
 
-    const handleWallHover = (id, orientation, isHovering) => {
-        const { hoveredWalls, clickedWalls } = state;
-        let newHoveredWalls = [...hoveredWalls];
     
-        const index = hoveredWalls.indexOf(id);
-    
-        if (isHovering) {
-        
-            if (orientation === 'vertical') {
-                const parts = id.split('-');
-                const row = parseInt(parts[1], 10);
-                const col = parseInt(parts[2], 10);
-    
-                const belowWall = `vwall-${row + 1}-${col}`;
-                if (newHoveredWalls.indexOf(belowWall) === -1 && clickedWalls.indexOf(belowWall)===-1 && row < 8){
-                    if (index === -1 && clickedWalls.indexOf(id)===-1){
-                        newHoveredWalls.push(id);
-                        newHoveredWalls.push(belowWall);
-                    }
-                } 
-            } else {
-                const parts = id.split('-');
-                const row = parseInt(parts[1], 10);
-                const col = parseInt(parts[2], 10);
-    
-                const nextWall = `hwall-${row}-${col + 1}`;
-                if (newHoveredWalls.indexOf(nextWall) === -1 && clickedWalls.indexOf(id) === -1 && col < 8){
-                    if (index === -1 && clickedWalls.indexOf(nextWall) === -1){
-                        newHoveredWalls.push(id);
-                        newHoveredWalls.push(nextWall);
-                    } 
-                }
-            }
-        } else {
-            while (newHoveredWalls.length) {
-                newHoveredWalls.pop();
-            }
-        }
-    
-        setState((prevState) => ({
-            ...prevState,
-            hoveredWalls: newHoveredWalls,
-        }));
-    };
     
 
     const handleWallClick = (id, orientation) => {
@@ -303,6 +263,52 @@ const GameLogic = (boardSize) => {
         }
     };
     
+
+    //////////////////////// HOVER EVENTS ///////////////////////////
+    const handleWallHover = (id, orientation, isHovering) => {
+        const { hoveredWalls, clickedWalls } = state;
+        let newHoveredWalls = [...hoveredWalls];
+    
+        const index = hoveredWalls.indexOf(id);
+    
+        if (isHovering) {
+        
+            if (orientation === 'vertical') {
+                const parts = id.split('-');
+                const row = parseInt(parts[1], 10);
+                const col = parseInt(parts[2], 10);
+    
+                const belowWall = `vwall-${row + 1}-${col}`;
+                if (newHoveredWalls.indexOf(belowWall) === -1 && clickedWalls.indexOf(belowWall)===-1 && row < 8){
+                    if (index === -1 && clickedWalls.indexOf(id)===-1){
+                        newHoveredWalls.push(id);
+                        newHoveredWalls.push(belowWall);
+                    }
+                } 
+            } else {
+                const parts = id.split('-');
+                const row = parseInt(parts[1], 10);
+                const col = parseInt(parts[2], 10);
+    
+                const nextWall = `hwall-${row}-${col + 1}`;
+                if (newHoveredWalls.indexOf(nextWall) === -1 && clickedWalls.indexOf(id) === -1 && col < 8){
+                    if (index === -1 && clickedWalls.indexOf(nextWall) === -1){
+                        newHoveredWalls.push(id);
+                        newHoveredWalls.push(nextWall);
+                    } 
+                }
+            }
+        } else {
+            while (newHoveredWalls.length) {
+                newHoveredWalls.pop();
+            }
+        }
+    
+        setState((prevState) => ({
+            ...prevState,
+            hoveredWalls: newHoveredWalls,
+        }));
+    };
 
     return ({
         state,

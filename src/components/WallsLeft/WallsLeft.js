@@ -1,4 +1,5 @@
 import React from 'react';
+import './WallsLeft.css';
 
 const WallsLeft = ({ wallsLeft, player }) => {
   const walls = [];

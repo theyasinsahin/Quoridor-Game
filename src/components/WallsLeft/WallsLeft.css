@@ -1,0 +1,20 @@
+.WallsLeft {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+  }
+  
+  .WallsLeft.player1s {
+    flex-direction: row-reverse;
+  }
+  
+  .WallsLeft.player2s {
+    flex-direction: row;
+  }
+  
+  .remaining-wall {
+    width: 10px;
+    height: 130px;
+    background-color: rgb(0, 0, 0);
+    margin: 15px;
+  }

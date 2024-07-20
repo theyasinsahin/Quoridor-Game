@@ -1,17 +1,14 @@
 import React from 'react';
 import Row from '../Row/Row';
 import HorizontalWallRow from '../HorizontalWallRow/HorizontalWallRow';
-import WallsLeft from '../WallsLeft/WallsLeft';
-import GameLogic from '../../hooks/gameLogic';
+import './Board.css';
 
-const Board = () => {
+const Board = (props) => {
     
-    const boardSize = 9;
-    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick } = GameLogic(boardSize);
+    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick, boardSize } = props;
 
     const rows = [];
 
-    const render = () => {
         
         const {highlightedSquares, players, hoveredWalls, clickedWalls, initialPlayer} = state;
     
@@ -51,19 +48,16 @@ const Board = () => {
     
       return (
         <div>
-            <WallsLeft wallsLeft={players.find(player => player.name === 'player2').wallsLeft} player="player2s" />
             <table className='Board'>
                 <tbody>            
                   {rows}
                 </tbody>
             </table>
-            <WallsLeft wallsLeft={players.find(player => player.name === 'player1').wallsLeft} player="player1s" />
 
         </div>
       );
-    }
+    
 
-    return render();
     
 }
 

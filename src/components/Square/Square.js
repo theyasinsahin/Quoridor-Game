@@ -1,4 +1,5 @@
 import React from 'react';
+import Player from '../Player/Player';
 
 const Square = (props) => {
   
@@ -17,10 +18,9 @@ const Square = (props) => {
   };
 
   const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
-  const playerClass = `${player ? player:null} ${(player && initialPlayer === player) ? "turn" : null}`;
   return (
     <td className={squareClass} id={id} onClick={handleClick}>
-      {player ? <div className={playerClass} id={player}></div> : null}
+      <Player initialPlayer={initialPlayer} player={player}/>
     </td>
   );
 }
