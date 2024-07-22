@@ -3,17 +3,19 @@ import '../../App';
 
 
 const Wall = (props) => {
-    const {orientation, isHovered, isClicked, id} = props;
+    const {orientation, isHovered, isClicked, id, onWallHover, onWallClick} = props;
+    
+    
     const handleMouseEnter = () => {
-        props.onWallHover(id, orientation, true);
+        onWallHover(id, orientation, true);
     };
 
     const handleMouseLeave = () => {
-        props.onWallHover(id, orientation, false);
+        onWallHover(id, orientation, false);
     };
 
     const handleClick = () => {
-        props.onWallClick(id, orientation);
+        onWallClick(id, orientation);
     }
 
     
