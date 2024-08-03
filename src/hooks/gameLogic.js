@@ -1,11 +1,9 @@
-import { useState} from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-
+import axios from 'axios';
 
 
 const GameLogic = (boardSize) => {
-
-    
 
     const [state, setState] = useState({
         highlightedSquares: [],
@@ -18,6 +16,39 @@ const GameLogic = (boardSize) => {
         clickedWalls: [],
     });
 
+    useEffect(() => {
+        // State değiştiğinde verileri gönder
+        sendStateToBackend();
+        fetchData();
+    }, [state.clickedWalls]);
+
+    const fetchData = async () => {
+        try {
+          const response = await fetch('http://127.0.0.1:5000/get_string');
+          const data = await response.json();
+          console.log(data.message);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+    };
+    
+    const sendStateToBackend = () => {
+        const data = {
+            clickedWalls: state.clickedWalls,
+            players: state.players,
+        };
+
+        axios.post('http://localhost:5000/update-state', {
+            clickedWalls: data.clickedWalls,
+            players: data.players
+        })
+        .then(response => {
+            console.log(response.data);
+        })
+        .catch(error => {
+            console.error('Error sending data to Python:', error);
+        });
+    };
 
     ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
