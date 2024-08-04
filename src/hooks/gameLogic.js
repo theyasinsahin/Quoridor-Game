@@ -264,9 +264,9 @@ const GameLogic = (boardSize) => {
             if (hoveredWalls.indexOf(id) !== -1 && clickedWalls.indexOf(id) === -1 && flag){
                 newClickedWalls.push(id);
                 newClickedWalls.push(belowWall);
-            } else if (flag === false && clickedWalls.indexOf(id) === -1 && clickedWalls.indexOf(belowWall) === -1){
+            } else if (clickedWalls.indexOf(id) !== -1 && clickedWalls.indexOf(belowWall) === -1 && flag === false){
                 newClickedWalls.push(id);
-                newClickedWalls.push(belowWall);            
+                newClickedWalls.push(belowWall);
             } else {
                 return;
             }
@@ -275,13 +275,13 @@ const GameLogic = (boardSize) => {
             const row = parseInt(parts[1], 10);
             const col = parseInt(parts[2], 10);
             const nextWall = `hwall-${row}-${col + 1}`;
-            if(hoveredWalls.indexOf(id) !== -1 && clickedWalls.indexOf(id) === -1 && flag){
+            if(hoveredWalls.indexOf(id) !== -1 && clickedWalls.indexOf(id) === -1){
                 newClickedWalls.push(id);
                 newClickedWalls.push(nextWall);
-            } else if (flag === false && clickedWalls.indexOf(id) === -1 && clickedWalls.indexOf(nextWall) === -1){
+            } else if (clickedWalls.indexOf(id) !== -1 && clickedWalls.indexOf(nextWall) === -1 && flag === false){
                 newClickedWalls.push(id);
-                newClickedWalls.push(nextWall);            
-            } else {
+                newClickedWalls.push(nextWall);
+            }else {
                 return;
             }
         }
