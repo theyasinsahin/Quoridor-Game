@@ -95,6 +95,8 @@ class Pawn:
                     if y < 8 and self.maze[y][x - 1][1] == 0:
                         moves.append(Direction.DOWN_LEFT)
         # -Direction Right
+        # print("Cors: ", self.x, self.y)
+        # print(*self.maze, sep="\n")
         if x < 8 and self.maze[y][x][0] == 0:
             # Next Cell is Empty
             if not (self.x + 1 == self.opponent.x and self.y == self.opponent.y):
@@ -122,6 +124,7 @@ class Pawn:
                     if x < 8 and self.maze[y + 1][x][0] == 0:
                         moves.append(Direction.DOWN_RIGHT)
         return moves
+
 
     def move(self, moveDir):
         moveCords = moveDir.value

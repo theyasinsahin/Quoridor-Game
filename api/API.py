@@ -13,20 +13,19 @@ AI.eval()
 @app.route('/update-state', methods=['POST'])
 def update_state():
     data = request.json
-    maze, players = organise_data(data)
-    walls = convertMazeToWalls(maze)
+    maze, players, walls = organise_data(data)
 
     playerX = players[0]['position']['col']
     playerY = players[0]['position']['row']
     playerWall = players[0]['wallsLeft']
 
-    opponentX = players[1]['position']['row']
+    opponentX = players[1]['position']['col']
     opponentY = players[1]['position']['row']
     opponentWall = players[1]['wallsLeft']
 
     playerPawn = Pawn("Player", playerX, playerY, maze)  # Red
     playerPawn.remainingWalls = playerWall
-    opponentPawn = Pawn("Player", opponentX, opponentY, maze)  # Blue
+    opponentPawn = Pawn("Opponent", opponentX, opponentY, maze)  # Blue
     opponentPawn.remainingWalls = opponentWall
 
     playerPawn.setOpponent(opponentPawn)
@@ -35,7 +34,6 @@ def update_state():
     state = get_state(playerPawn, opponentPawn, walls)
     action = get_action(AI, state, playerPawn, opponentPawn)
     action = list(action)
-    print(action)
     if len(action) == 2:
         action[0] += playerX
         action[1] += playerY

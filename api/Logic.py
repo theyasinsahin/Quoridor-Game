@@ -80,6 +80,8 @@ def get_action(model, state, playerPawn, opponentPawn):
         except ValueError:
             return randomMove(playerPawn, opponentPawn, "Move")
         moves = list(map(lambda x: x.value, playerPawn.possibleMoves()))
+        print(action)
+        print(moves)
         if action not in moves:
             return randomMove(playerPawn, opponentPawn, "Move")
     else:
@@ -95,6 +97,7 @@ def get_action(model, state, playerPawn, opponentPawn):
             playerPawn.removeWall(action)
     return action
 
+
 def randomMove(playerPawn, opponentPawn, actionType):
     if actionType == "Move":
         return random.choice(playerPawn.possibleMoves()).value
@@ -107,36 +110,27 @@ def randomMove(playerPawn, opponentPawn, actionType):
 
 
 def organise_data(result):
-        # Initialize the walls array with all zeros
-        maze = [[[0, 0] for _ in range(9)] for _ in range(9)]
+    # Initialize the walls array with all zeros
+    maze = [[[0, 0] for _ in range(9)] for _ in range(9)]
+    walls = []
+    # Process the clicked walls and update the walls array
+    for wall in result['clickedWalls'][::2]:
+        pieces = wall.split("-")
+        x = int(pieces[2])
+        y = int(pieces[1])
+        alg = 1 if pieces[0] == "hwall" else 0
+        walls.append((y, x, alg))
 
-        # Process the clicked walls and update the walls array
-        for wall in result['clickedWalls']:
-            if wall.startswith('hwall'):
-                _, row, col = wall.split('-')
-                row, col = int(row), int(col)
-                maze[row][col][1] = 1
-            elif wall.startswith('vwall'):
-                _, row, col = wall.split('-')
-                row, col = int(row), int(col)
-                maze[row][col][0] = 1
+    for wall in result['clickedWalls']:
+        if wall.startswith('hwall'):
+            _, row, col = wall.split('-')
+            row, col = int(row), int(col)
+            maze[row][col][1] = 1
+        elif wall.startswith('vwall'):
+            _, row, col = wall.split('-')
+            row, col = int(row), int(col)
+            maze[row][col][0] = 1
+    # Retrieve the players information
+    players = result['players']
 
-        # Retrieve the players information
-        players = result['players']
-
-        return maze, players
-
-def convertMazeToWalls(maze):
-    walls = list()
-    maze = list(maze)
-    for i in range(len(maze) - 1):
-        for j in range(len(maze[i]) - 1):
-            if maze[i][j][0] == maze[i + 1][j][0] == 1:
-                maze[i][j][0] = 0
-                maze[i + 1][j][0] = 0
-                walls.append((i, j, 0))
-            if maze[i][j][1] == maze[i][j + 1][1] == 1:
-                maze[i][j][1] = 0
-                maze[i][j + 1][1] = 0
-                walls.append((i, j, 1))
-    return walls
+    return maze, players, walls
