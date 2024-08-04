@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 
 const GameLogic = (boardSize) => {
 
+     ///////////////// This is for change the file /////////////
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { player1Name, player2Name, mode } = location.state || { player1Name: 'Player 1', player2Name: 'Player 2', mode: '2Player'};
+
+
     const [state, setState] = useState({
+        nickNames: [
+            player1Name,
+            player2Name
+        ],
         highlightedSquares: [],
         players: [
         { position: { row: 0, col: Math.floor(boardSize / 2) }, name: 'player2', wallsLeft: 10 },
@@ -18,7 +28,7 @@ const GameLogic = (boardSize) => {
 
     useEffect(() => {
         // State değiştiğinde verileri gönder
-        if(state.initialPlayer === "player2"){
+        if(mode === "AI" && state.initialPlayer === "player2"){
             sendStateToBackend();
         }
     }, [state.players]);
@@ -48,8 +58,7 @@ const GameLogic = (boardSize) => {
         });
     };
 
-    ///////////////// This is for change the file /////////////
-    const navigate = useNavigate();
+   
     
 
     /////////////////  BFS ALGORITHM /////////////////////////
@@ -212,7 +221,7 @@ const GameLogic = (boardSize) => {
     
 
     const movePlayer = (rowIndex, colIndex) => {
-        const { players, initialPlayer } = state;
+        const { players, initialPlayer, nickNames } = state;
         const currentPlayer = players.find((player) => player.name === initialPlayer);
 
         const currentRow = currentPlayer.position.row;
@@ -237,10 +246,10 @@ const GameLogic = (boardSize) => {
         }));
 
         if (initialPlayer === 'player1' && rowIndex === 0) {
-            navigate('/game-over', { state: {winner: 'Player 1'} });
+            navigate('/game-over', { state: {winner: nickNames[0]} });
         }
         if (initialPlayer === 'player2' && rowIndex === 8) {
-            navigate('/game-over', { state: {winner: 'Player 2'} });
+            navigate('/game-over', { state: {winner: nickNames[1]} });
         }
     };
 

@@ -20,7 +20,7 @@ const Square = (props) => {
   const squareClass = `Square ${isHighlighted ? 'highlighted' : ''}`;
   return (
     <td className={squareClass} id={id} onClick={handleClick}>
-      <Player initialPlayer={initialPlayer} player={player}/>
+      <Player initialPlayer={initialPlayer } player={player}/>
     </td>
   );
 }
