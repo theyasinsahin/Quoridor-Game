@@ -18,8 +18,10 @@ const GameLogic = (boardSize) => {
 
     useEffect(() => {
         // State değiştiğinde verileri gönder
-        sendStateToBackend();
-    }, [state.clickedWalls]);
+        if(state.initialPlayer === "player2"){
+            sendStateToBackend();
+        }
+    }, [state.players]);
 
     
     const sendStateToBackend = () => {
@@ -28,7 +30,18 @@ const GameLogic = (boardSize) => {
             players: state.players
         })
         .then(response => {
-            console.log(response.data);
+            const action = response.data
+            if(action.length === 2){
+                console.log("a move")
+                movePlayer(action[0], action[1]);
+            }else{
+                console.log("this is a fucking wall")
+                const orientation = (action[2] === 0) ? 'vertical' : 'horizontal';
+
+                const id = (orientation === "horizontal") ? "hwall"+action[0]+"-"+action[1] : "vwall"+action[0]+"-"+action[1]
+                handleWallClick(id, orientation);
+            }
+            console.log(action);
         })
         .catch(error => {
             console.error('Error sending data to Python:', error);
