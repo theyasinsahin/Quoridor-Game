@@ -15,7 +15,7 @@ const Wall = (props) => {
     };
 
     const handleClick = () => {
-        onWallClick(id, orientation);
+        onWallClick(id, orientation, true);
     }
 
     
