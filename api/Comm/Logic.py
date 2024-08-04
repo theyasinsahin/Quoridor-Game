@@ -78,28 +78,19 @@ def get_action(model, state, playerPawn, opponentPawn):
         try:
             Direction(action)
         except ValueError:
-            print(action)
-            print("Fuck1")
             return randomMove(playerPawn, opponentPawn, "Move")
-        moves = list(map(lambda x: x.value, opponentPawn.possibleMoves()))
-        print(moves)
+        moves = list(map(lambda x: x.value, playerPawn.possibleMoves()))
         if action not in moves:
-            print(action)
-            print("Fuck2")
             return randomMove(playerPawn, opponentPawn, "Move")
     else:
-        walls = opponentPawn.possibleWalls()
-        wallLeft = opponentPawn.remainingWalls
+        walls = playerPawn.possibleWalls()
+        wallLeft = playerPawn.remainingWalls
         if action not in walls or wallLeft < 0:
-            print(action)
-            print("Fuck3")
             return randomMove(playerPawn, opponentPawn, "Wall")
         else:
             playerPawn.placeWall(action)
             if not (playerPawn.canReachEnd() and opponentPawn.canReachEnd()):
                 playerPawn.removeWall(action)
-                print(action)
-                print("Fuck4")
                 return randomMove(playerPawn, opponentPawn, "Wall")
             playerPawn.removeWall(action)
     return action
