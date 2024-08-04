@@ -5,6 +5,8 @@
 /.pnp
 .pnp.js
 
+#Pycharm
+.idea
 # testing
 /coverage
 
