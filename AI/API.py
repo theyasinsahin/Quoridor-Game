@@ -7,19 +7,6 @@ import torch
 app = Flask(__name__)
 CORS(app)  # CORS'u etkinleştir
 
-"""  Bot  """
-@app.route('/get-action-bot', methods=['POST'])
-def get_action_bot():
-    data = request.json
-    state = data['state']
-    possibleWallActions = data['actions']['putWall']
-    possibleMoveActions = data['actions']['moves']
-    clickedWalls = state['clickedWalls']
-    action = action_calculate(state, possibleMoveActions, possibleWallActions, clickedWalls)
-    
-    return (action)
-
-
 
 """  AI  """
 AI = QLinearNet()

@@ -4,7 +4,7 @@ import WallsLeft from '../../components/WallsLeft/WallsLeft';
 import GameLogic from '../../hooks/gameLogic';
 import { useLocation } from 'react-router-dom';
 
-const Game = () => {
+const Game = (props) => {
     const location = useLocation();
     const { player1Name, player2Name, mode } = location.state || {};
 
@@ -27,6 +27,9 @@ const Game = () => {
                 handleWallClick={handleWallClick}
                 boardSize={boardSize} />
             <WallsLeft wallsLeft={players.find(player => player.name === 'player1').wallsLeft} player="player1s" />
+
+            <button onClick={props.logout}>Logout</button>
+
         </div>
         )
     }

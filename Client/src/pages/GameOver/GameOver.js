@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './GameOver.css';
 
-const GameOver = () => {
+const GameOver = (props) => {
   const location = useLocation();
   const { winner } = location.state || { winner: 'Unknown' };
 

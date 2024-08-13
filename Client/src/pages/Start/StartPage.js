@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StartPage.css';
 
-const StartPage = () => {
+const StartPage = (props) => {
 
     const [player1Name, setPlayer1Name] = useState('');
     const [player2Name, setPlayer2Name] = useState('');
     const [gameMode, setGameMode] = useState('');
     const navigate = useNavigate();
-    
+
+    /*useEffect(() => {
+        setPlayer1Name(props.user.name);
+    }, [props.user.name]);    */
+
     const handleSubmit = (e) => {
         navigate('/game', { state: { player1Name, player2Name, mode: gameMode } });
     };
@@ -28,7 +32,7 @@ const StartPage = () => {
                     <label>
                         Player 1 Name:
                         <input type="text" value={player1Name} onChange={(e) => setPlayer1Name(e.target.value)} required />
-                    </label>
+                    </label>                
                 </div>
                 {(gameMode !== 'AI' && gameMode !== 'Bot') && (
                     <div>

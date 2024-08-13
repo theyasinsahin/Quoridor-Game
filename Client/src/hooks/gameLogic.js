@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-
+import AI from "./AI/ai";
+const ai = new AI(1,1,false,false);
 const GameLogic = (boardSize) => {
+    const worker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
 
      ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
@@ -17,45 +19,55 @@ const GameLogic = (boardSize) => {
         ],
         highlightedSquares: [],
         players: [
-        { position: { row: 0, col: Math.floor(boardSize / 2) }, name: 'player2', wallsLeft: 10, shortestWay: [{}]},
-        { position: { row: 8, col: Math.floor(boardSize / 2) }, name: 'player1', wallsLeft: 10, shortestWay: [{}]},
+        { position: { row: 0, col: Math.floor(boardSize / 2) }, name: 'player2', wallsLeft: 10, shortestWay: [{}], goalRow:8},
+        { position: { row: 8, col: Math.floor(boardSize / 2) }, name: 'player1', wallsLeft: 10, shortestWay: [{}], goalRow:0},
         ],
         initialPlayer: 'player1',
+        turn: 0,
         hoveredWalls: [],
         hoveredSpaces: [],
         clickedWalls: [],
         clickedSpaces: [],
+        possibleActions: {},
     });
 
 
+
     useEffect(() => {
+        console.log(state.turn);
+        const turn = state.turn + 1;
+        setState((prevState) => ({
+            ...prevState,
+            turn: turn
+        }))
+    }, [state.initialPlayer])
+
+
+    useEffect(() => {
+        console.log(state.initialPlayer);
         // State değiştiğinde verileri gönder
         if(mode === "AI" && state.initialPlayer === "player2"){
-            sendStateToBackendforAI();
+            //sendStateToBackendforAI();
         }if(mode === "Bot" && state.initialPlayer === "player2"){
-            sendStateToBackendforBot();
+            //refresh state.possibleActions 
+            updatePossibleActionsAndSendToWorker();
+            
+            worker.onmessage = function (response) {
+                const action = response.data;
+                console.log(action);
+                if (action.type === "move") {
+                    console.log("hamle yaptı");
+                    movePlayer(action.row, action.col);
+                } else if (action.type === "wall") {
+                    console.log("duvar koydu");
+                    handleWallClick(action.id, action.orientation, false);
+                }
+            };
         }
+
     }, [state.players]);
 
-    const sendStateToBackendforBot = () => {
-        axios.post('http://localhost:5000/get-action-bot', {
-            state: state,
-            actions: getPossibleActions(state.players[0])
-        })
-        .then(response => {
-            const action = response.data
-            if(action.type=== "move"){
-                movePlayer(action.row, action.col);
-            }else if (action.type === "wall"){
-                handleWallClick(action.id, action.orientation, false);
-            }
-            console.log(action)
-        })
-        .catch(error => {
-            console.error('Error sending data to Python:', error);
-        });
-    }
-    
+
     const sendStateToBackendforAI = () => {
         axios.post('http://localhost:5000/update-state', {
             clickedWalls: state.clickedWalls,
@@ -64,7 +76,7 @@ const GameLogic = (boardSize) => {
         .then(response => {
             const action = response.data
             if(action.length === 2){
-                movePlayer(action[0], action[1]);
+                //movePlayer(action[0], action[1]);
             }else{
                 const orientation = (action[2] === 0) ? 'vertical' : 'horizontal';
 
@@ -368,6 +380,7 @@ const GameLogic = (boardSize) => {
                     // Update wallsLeft if the player matches initialPlayer
                     const updatedPlayer = player.name === state.initialPlayer ? { ...player, wallsLeft: player.wallsLeft - 1 } : player;
                     
+                    
                     // Update shortestWay based on the index
                     if (index === 0) {
                         return { ...updatedPlayer, shortestWay: player2Dist };
@@ -461,8 +474,23 @@ const GameLogic = (boardSize) => {
                 }
             }
         }
-    
+        
         return { moves, putWall: possibleWallActions };
+    };
+
+    const updatePossibleActionsAndSendToWorker = () => {
+        const player = state.players[0];
+        const newPossibleActions = getPossibleActions(player);
+
+        // Update state with new possibleActions
+        setState(prevState => {
+            const newState = { ...prevState, possibleActions: newPossibleActions };
+
+            // Send updated state to worker
+            worker.postMessage(newState);
+
+            return newState;
+        });
     };
 
     return ({
@@ -471,6 +499,11 @@ const GameLogic = (boardSize) => {
         movePlayer,
         handleWallHover,
         handleWallClick,
+        bfs,
+        isValidMove,
+        isWallBlockingMove,
+        getPossibleActions,
+        reconstructPath,
     });
 }
 
