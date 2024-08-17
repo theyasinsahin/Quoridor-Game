@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import AI from "./AI/ai";
-const ai = new AI(1,1,false,false);
+
 const GameLogic = (boardSize) => {
-    const worker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
 
      ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
@@ -31,10 +30,7 @@ const GameLogic = (boardSize) => {
         possibleActions: {},
     });
 
-
-
     useEffect(() => {
-        console.log(state.turn);
         const turn = state.turn + 1;
         setState((prevState) => ({
             ...prevState,
@@ -44,28 +40,41 @@ const GameLogic = (boardSize) => {
 
 
     useEffect(() => {
-        console.log(state.initialPlayer);
+
         // State değiştiğinde verileri gönder
         if(mode === "AI" && state.initialPlayer === "player2"){
             //sendStateToBackendforAI();
         }if(mode === "Bot" && state.initialPlayer === "player2"){
-            //refresh state.possibleActions 
-            updatePossibleActionsAndSendToWorker();
-            
-            worker.onmessage = function (response) {
-                const action = response.data;
-                console.log(action);
-                if (action.type === "move") {
-                    console.log("hamle yaptı");
-                    movePlayer(action.row, action.col);
-                } else if (action.type === "wall") {
-                    console.log("duvar koydu");
-                    handleWallClick(action.id, action.orientation, false);
-                }
-            };
+             //refresh state.possibleActions 
+            updatePossibleActions();
         }
 
     }, [state.players]);
+
+    useEffect(() => {
+        if(state.initialPlayer === 'player2' && mode==='Bot'){
+            // Create a new web worker
+            const myWorker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
+        
+            // Set up event listener for messages from the worker
+            myWorker.onmessage = function (response) {
+                const action = response.data;
+                if (action.type === "move") {
+                    console.log(action);
+                    movePlayer(action.row, action.col);
+                } else if (action.type === "wall") {
+                    console.log(action);
+                    handleWallClick(action.id, action.orientation, false);
+                }
+            };        
+            myWorker.postMessage(state);
+            
+            // Clean up the worker when the component unmounts
+            return () => {
+                myWorker.terminate();
+            };
+        }
+    }, [state.possibleActions])
 
 
     const sendStateToBackendforAI = () => {
@@ -83,7 +92,6 @@ const GameLogic = (boardSize) => {
                 const id = (orientation === "horizontal") ? "hwall-"+action[0]+"-"+action[1] : "vwall-"+action[0]+"-"+action[1]
                 handleWallClick(id, orientation, false);
             }
-            console.log(action);
         })
         .catch(error => {
             console.error('Error sending data to Python:', error);
@@ -478,19 +486,14 @@ const GameLogic = (boardSize) => {
         return { moves, putWall: possibleWallActions };
     };
 
-    const updatePossibleActionsAndSendToWorker = () => {
+    const updatePossibleActions = () => {
         const player = state.players[0];
         const newPossibleActions = getPossibleActions(player);
-
         // Update state with new possibleActions
-        setState(prevState => {
-            const newState = { ...prevState, possibleActions: newPossibleActions };
-
-            // Send updated state to worker
-            worker.postMessage(newState);
-
-            return newState;
-        });
+        setState(prevState => ({
+            ...prevState, 
+            possibleActions: newPossibleActions
+        }));
     };
 
     return ({
