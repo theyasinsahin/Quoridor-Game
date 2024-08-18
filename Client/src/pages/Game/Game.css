@@ -1,0 +1,65 @@
+/*
+title: rgb(255, 221, 179)
+background: rgb(252, 242, 230)
+second color: rgb(115, 115, 115)
+*/
+
+.game-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Add padding inside the container */
+    border-radius: 10px; /* Optional: Round the corners for a smoother look */
+    position: relative; /* To allow absolute positioning of the header */
+    max-height:1100px;
+}
+
+.game-title{
+    font-size: 4rem; /* Make the text bigger */
+    margin-bottom: 1em;
+    margin-top: -1em;
+    color: rgb(255, 221, 179); /* Yellow */
+    text-align: center;
+    text-shadow:
+        -2px -2px 0 #000,  
+        2px -2px 0 #000,  
+        -2px 2px 0 #000,  
+        2px 2px 0 #000; /* Four shadows creating a black outline */
+
+}
+
+.name{
+    border-radius: 5px;
+    border: 2px solid rgb(115, 115, 115); /* Orange border */
+    background-color: rgb(255, 221, 179); /* Dark background */
+    color: rgb(115, 115, 115); /* White text inside the input */
+    max-width: fit-content;
+    margin: 1em;
+    padding: 0.5em;
+    font-weight: bold;
+}
+
+.game-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px; /* Genişliği sınırlamak isteyebilirsiniz */
+}
+
+.player-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+
+.up {
+    position:relative;
+    top: 0; /* Üst kısmına yapışık */
+}
+
+.down {
+    position: absolute;
+    bottom: 0; /* Alt kısmına yapışık */
+}

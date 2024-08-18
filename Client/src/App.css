@@ -1,3 +1,8 @@
+/*
+title: rgb(255, 221, 179)
+background: rgb(252, 242, 230)
+second color: rgb(115, 115, 115)
+*/
 
 .App{
   display: flex;
@@ -8,35 +13,32 @@
 }
 
 
-.Row {
-  border: 5px solid black;
-}
 
 .Square {
   height: 60px;
   width: 60px;
-  background-color: aqua;
+  background-color: #769656;
   position: relative;
 }
 
 .Square.highlighted {
-  background-color: pink;
+  background-color: rgb(255, 255, 139);
 }
 
 .Wall.horizontal {
   height: 6px;
   width: 60px;
-  background-color: orange;
+  background-color: #EEEED2;
 }
 
 .Wall.vertical {
   height: 60px;
   width: 6px;
-  background-color: orange;
+  background-color: #EEEED2;
 }
 
 .Wall.hovered {
-  background-color: brown;
+  background-color: rgb(68, 68, 68);
 } 
 
 .Wall.clicked {
@@ -46,7 +48,7 @@
 .Space {
   height: 10px;
   width: 10px;
-  background-color: yellow;
+  background-color: #EEEED2;
 }
 .Space.clicked{
   height: 10px;
@@ -56,7 +58,7 @@
 .Space.hovered{
   height: 10px;
   width: 10px;
-  background-color: brown;
+  background-color: rgb(68, 68, 68);
 }
 
 

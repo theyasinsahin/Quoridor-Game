@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import AI from "./AI/ai";
-
 const GameLogic = (boardSize) => {
 
      ///////////////// This is for change the file /////////////
@@ -43,7 +41,26 @@ const GameLogic = (boardSize) => {
 
         // State değiştiğinde verileri gönder
         if(mode === "AI" && state.initialPlayer === "player2"){
-            //sendStateToBackendforAI();
+            // Create a new web worker
+            const myWorker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
+        
+            // Set up event listener for messages from the worker
+            myWorker.onmessage = function (response) {
+                const action = response.data;
+                if (action.type === "move") {
+                    console.log(action);
+                    movePlayer(action.row, action.col);
+                } else if (action.type === "wall") {
+                    console.log(action);
+                    handleWallClick(action.id, action.orientation, false);
+                }
+            };        
+            myWorker.postMessage(state);
+            
+            // Clean up the worker when the component unmounts
+            return () => {
+                myWorker.terminate();
+            };
         }if(mode === "Bot" && state.initialPlayer === "player2"){
              //refresh state.possibleActions 
             updatePossibleActions();
@@ -99,8 +116,6 @@ const GameLogic = (boardSize) => {
     };
 
    
-    
-
     /////////////////  BFS ALGORITHM /////////////////////////
     const bfs = (start, goalRow, boardSize, walls) => {
         const directions = [

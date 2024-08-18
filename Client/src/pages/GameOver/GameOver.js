@@ -7,9 +7,9 @@ const GameOver = (props) => {
   const { winner } = location.state || { winner: 'Unknown' };
 
   return (
-    <div>
-      <h1>Game Over</h1>
-      <p>{winner} wins!</p>
+    <div className='game-end-container'>
+      <h5>Game Over</h5>
+      <p className='winner'>{winner} wins!</p>
       <Link to="/">Play Again</Link>
     </div>
   );

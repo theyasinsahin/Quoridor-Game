@@ -112,7 +112,6 @@ const simulateWallEffect = (state, walls, bfs) => {
     return newWay;
 };
 
-
 /////////////////  BFS ALGORITHM /////////////////////////
 const bfs = (start, goalRow, boardSize, walls) => {
     const directions = [
@@ -180,7 +179,6 @@ const isWallBlockingMove = (row, col, newRow, newCol, walls) => {
     }
     return false;
 };
-
 
 // Check if the move is valid (not through a wall)
 const isValidMove = (currentRow, currentCol, targetRow, targetCol, clickedWalls) => {
