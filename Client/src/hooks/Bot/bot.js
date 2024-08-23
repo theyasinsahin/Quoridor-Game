@@ -2,61 +2,96 @@ const boardSize = 9;
 
 
 const actionCalculate = (state) => {
-    const player1 = state.players[1];
-    const player2 = state.players[0];
-
+    const player1 = state.players[0];
+    const player2 = state.players[1];
     const possibleWallActions = state.possibleActions.putWall;
     const possibleMoveActions = state.possibleActions.moves;
  
     const clickedWalls = state.clickedWalls;
-        const player1Way = player1.shortestWay;
+    const player1Way = player1.shortestWay;
     const player2Way = player2.shortestWay;
 
     const player1Dist = player1Way.length;
     const player2Dist = player2Way.length;
 
-    if (player2Dist < player1Dist) {
-        let bestAction = null;
-        let shortestDistance = Infinity;
-
-        possibleMoveActions.forEach(possibleMoveAction => {
-            // Simulate the move
-            const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-            const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length -1;
-            console.log(newPosition, ": ", newDistance);
-
-            if (newDistance < shortestDistance) {
-                shortestDistance = newDistance;
-                bestAction = possibleMoveAction;
-            }
-        });
-
-        return { type: "move", col: bestAction.col, row: bestAction.row };
-    } else {
-        const bestWall = findBestWall(state, player1Way, possibleWallActions, clickedWalls, bfs);
-        if (bestWall) {
-            return { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
-        } else {
-            // If no valid wall placement found, move instead
-            let shortestDistance = Infinity;
+    console.log(state.playAs);
+    if(state.playAs === 'player1'){
+        if (player2Dist < player1Dist) {
             let bestAction = null;
+            let shortestDistance = Infinity;
             possibleMoveActions.forEach(possibleMoveAction => {
                 // Simulate the move
                 const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length-1;
-
+                const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length;
+    
                 if (newDistance < shortestDistance) {
                     shortestDistance = newDistance;
                     bestAction = possibleMoveAction;
                 }
             });
-
             return { type: "move", col: bestAction.col, row: bestAction.row };
+        } else {
+            const bestWall = findBestWall(player1, state.players, player1Way, possibleWallActions, clickedWalls, bfs);
+            if (bestWall) {
+                return { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
+            } else {
+                // If no valid wall placement found, move instead
+                let shortestDistance = Infinity;
+                let bestAction = null;
+                possibleMoveActions.forEach(possibleMoveAction => {
+                    // Simulate the move
+                    const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
+                    const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length;
+    
+                    if (newDistance < shortestDistance) {
+                        shortestDistance = newDistance;
+                        bestAction = possibleMoveAction;
+                    }
+                });
+                return { type: "move", col: bestAction.col, row: bestAction.row };
+            }
+        }
+    }else{
+        if (player1Dist < player2Dist) {
+            let bestAction = null;
+            let shortestDistance = Infinity;
+            possibleMoveActions.forEach(possibleMoveAction => {
+                // Simulate the move
+                const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
+                const newDistance = bfs(newPosition, player1.goalRow, boardSize, clickedWalls).length;
+    
+                if (newDistance < shortestDistance) {
+                    shortestDistance = newDistance;
+                    bestAction = possibleMoveAction;
+                }
+            });
+            return { type: "move", col: bestAction.col, row: bestAction.row };
+        } else {
+            const bestWall = findBestWall(player2, state.players, player2Way, possibleWallActions, clickedWalls, bfs);
+            if (bestWall) {
+                return { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
+            } else {
+                // If no valid wall placement found, move instead
+                let shortestDistance = Infinity;
+                let bestAction = null;
+                possibleMoveActions.forEach(possibleMoveAction => {
+                    // Simulate the move
+                    const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
+                    const newDistance = bfs(newPosition, player1.goalRow, boardSize, clickedWalls).length;
+    
+                    if (newDistance < shortestDistance) {
+                        shortestDistance = newDistance;
+                        bestAction = possibleMoveAction;
+                    }
+                });
+                return { type: "move", col: bestAction.col, row: bestAction.row };
+            }
         }
     }
+    
 };
 
-const findBestWall = (state, player1Way, possibleWallActions, clickedWalls, bfs) => {
+const findBestWall = (player, players, playerWay, possibleWallActions, clickedWalls, bfs) => {
     let bestWall = null;
     let maxExtension = 0;
 
@@ -76,9 +111,9 @@ const findBestWall = (state, player1Way, possibleWallActions, clickedWalls, bfs)
 
         clickedWalls.push(id, newId);
 
-        if (isValidWallPlacement(state, clickedWalls, bfs)) {
-            const extendedPath = simulateWallEffect(state, clickedWalls, bfs);
-            const extension = extendedPath.length - player1Way.length;
+        if (isValidWallPlacement(players, clickedWalls, bfs)) {
+            const extendedPath = simulateWallEffect(player, clickedWalls, bfs);
+            const extension = extendedPath.length - playerWay.length;
 
             if (extension > maxExtension) {
                 maxExtension = extension;
@@ -93,9 +128,9 @@ const findBestWall = (state, player1Way, possibleWallActions, clickedWalls, bfs)
     return bestWall;
 };
 
-const isValidWallPlacement = (state, walls, bfs) => {
-    const player1 = state.players[1];
-    const player2 = state.players[0];
+const isValidWallPlacement = (players, walls, bfs) => {
+    const player1 = players[0];
+    const player2 = players[1];
 
     // Check if both players have a valid path to their respective goals
     const path1 = bfs(player1.position, player1.goalRow, boardSize, walls);
@@ -104,10 +139,10 @@ const isValidWallPlacement = (state, walls, bfs) => {
     return path1.length > 0 && path2.length > 0;
 };
 
-const simulateWallEffect = (state, walls, bfs) => {
+const simulateWallEffect = (player, walls, bfs) => {
     // Simulate placing the wall and calculate the new shortest path for the opponent
-    const start = state.players[1].position;
-    const newWay = bfs(start, state.players[1].goalRow, boardSize, walls);
+    const start = player.position;
+    const newWay = bfs(start, player.goalRow, boardSize, walls);
 
     return newWay;
 };

@@ -6,18 +6,19 @@ const GameLogic = (boardSize) => {
      ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
     const location = useLocation();
-    const { player1Name, player2Name, mode } = location.state || { player1Name: 'Player 1', player2Name: 'Player 2', mode: '2Player'};
+    const { player1Name, player2Name, mode, playerRole } = location.state || { player1Name: 'Player 1', player2Name: 'Player 2', mode: '2Player', playerRole:'player1'};
 
 
     const [state, setState] = useState({
+        playAs: playerRole,
         nickNames: [
-            player1Name,
-            player2Name
+            playerRole === 'player1' ? player1Name : player2Name,
+            playerRole === 'player1' ? player2Name : player1Name
         ],
         highlightedSquares: [],
-        players: [
+        players:
+        [{ position: { row: 8, col: Math.floor(boardSize / 2) }, name: 'player1', wallsLeft: 10, shortestWay: [{}], goalRow:0},
         { position: { row: 0, col: Math.floor(boardSize / 2) }, name: 'player2', wallsLeft: 10, shortestWay: [{}], goalRow:8},
-        { position: { row: 8, col: Math.floor(boardSize / 2) }, name: 'player1', wallsLeft: 10, shortestWay: [{}], goalRow:0},
         ],
         initialPlayer: 'player1',
         turn: 0,
@@ -27,6 +28,21 @@ const GameLogic = (boardSize) => {
         clickedSpaces: [],
         possibleActions: {},
     });
+
+    useEffect(() => {
+        const player1Way = bfs(state.players[0].position, state.players[0].goalRow, boardSize, state.clickedWalls, state.players);
+        const player2Way = bfs(state.players[1].position, state.players[1].goalRow, boardSize, state.clickedWalls, state.players);
+
+        setState((prevState) => ({
+            ...prevState,
+            players: [
+                { ...prevState.players[0], shortestWay: player1Way },
+                { ...prevState.players[1], shortestWay: player2Way },
+            ]
+        }))
+    }, [])
+
+    
 
     useEffect(() => {
         const turn = state.turn + 1;
@@ -40,28 +56,11 @@ const GameLogic = (boardSize) => {
     useEffect(() => {
 
         // State değiştiğinde verileri gönder
-        if(mode === "AI" && state.initialPlayer === "player2"){
-            // Create a new web worker
-            const myWorker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
-        
-            // Set up event listener for messages from the worker
-            myWorker.onmessage = function (response) {
-                const action = response.data;
-                if (action.type === "move") {
-                    console.log(action);
-                    movePlayer(action.row, action.col);
-                } else if (action.type === "wall") {
-                    console.log(action);
-                    handleWallClick(action.id, action.orientation, false);
-                }
-            };        
-            myWorker.postMessage(state);
+        if(mode === "AI" && ((state.initialPlayer === "player2" && state.playAs==="player1") || (state.initialPlayer === "player1" && state.playAs==="player2"))){
             
-            // Clean up the worker when the component unmounts
-            return () => {
-                myWorker.terminate();
-            };
-        }if(mode === "Bot" && state.initialPlayer === "player2"){
+            updatePossibleActions();
+            
+        }if(mode === "Bot" && ((state.initialPlayer === "player2" && state.playAs==="player1") || (state.initialPlayer === "player1" && state.playAs==="player2"))){
              //refresh state.possibleActions 
             updatePossibleActions();
         }
@@ -69,21 +68,43 @@ const GameLogic = (boardSize) => {
     }, [state.players]);
 
     useEffect(() => {
-        if(state.initialPlayer === 'player2' && mode==='Bot'){
+        if(((state.initialPlayer === "player2" && state.playAs==="player1") || (state.initialPlayer === "player1" && state.playAs==="player2")) && mode==='Bot'){
+            // Create a new web worker
+            const myWorker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
+           
+            // Set up event listener for messages from the worker
+            myWorker.onmessage = function (response) {
+                const action = response.data;
+                console.log(action);
+
+                if (action.type === "move") {
+                    movePlayer(action.row, action.col);
+                } else if (action.type === "wall") {
+                    handleWallClick(action.id, action.orientation, false);
+                }
+            };         
+            myWorker.postMessage(state);
+            
+            // Clean up the worker when the component unmounts
+            return () => {
+                myWorker.terminate();
+            };
+        }
+
+        if(((state.initialPlayer === "player2" && state.playAs==="player1") || (state.initialPlayer === "player1" && state.playAs==="player2")) && mode==='AI'){
             // Create a new web worker
             const myWorker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
         
             // Set up event listener for messages from the worker
             myWorker.onmessage = function (response) {
                 const action = response.data;
+                console.log(action);
                 if (action.type === "move") {
-                    console.log(action);
                     movePlayer(action.row, action.col);
                 } else if (action.type === "wall") {
-                    console.log(action);
                     handleWallClick(action.id, action.orientation, false);
                 }
-            };        
+            };    
             myWorker.postMessage(state);
             
             // Clean up the worker when the component unmounts
@@ -117,7 +138,7 @@ const GameLogic = (boardSize) => {
 
    
     /////////////////  BFS ALGORITHM /////////////////////////
-    const bfs = (start, goalRow, boardSize, walls) => {
+    const bfs = (start, goalRow, boardSize, walls, players) => {
         const directions = [
             { row: -1, col: 0 }, // up
             { row: 1, col: 0 },  // down
@@ -137,18 +158,19 @@ const GameLogic = (boardSize) => {
                 return reconstructPath(previous, start, { row, col }); // Reconstruct the path
             }
     
-            for (const direction of directions) {
-                const newRow = row + direction.row;
-                const newCol = col + direction.col;
-                
-                if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize && !visited[newRow][newCol]) {
-                    if (!isWallBlockingMove(row, col, newRow, newCol, walls) && isValidMove(row, col, newRow, newCol)) {
-                        queue.push({ row: newRow, col: newCol });
-                        visited[newRow][newCol] = true;
-                        previous[`${newRow},${newCol}`] = { row, col }; // Track the path
-                    }
+            const possibleMoves = getPossibleMoveActions(row, col, players, walls);
+            
+            for (const move of possibleMoves) {
+                const newRow = move.row;
+                const newCol = move.col;
+
+                if (!visited[newRow][newCol]) {
+                                      
+                    queue.push({ row: newRow, col: newCol });
+                    visited[newRow][newCol] = true;
+                    previous[`${newRow},${newCol}`] = { row, col }; // Track the path
                 }
-            }
+            } 
         }
     
         return []; // Return empty array if no path found
@@ -213,89 +235,20 @@ const GameLogic = (boardSize) => {
 
     //////////////////// CLICK EVENTS //////////////////
     const handlePlayerClick = (rowIndex, colIndex) => {
-        const { players, initialPlayer, clickedWalls } = state;
-    
+        const {players, initialPlayer, clickedWalls} = state;
         const currentPlayer = players.find((player) => player.name === initialPlayer);
 
-        if (currentPlayer.position.row === rowIndex && currentPlayer.position.col === colIndex) {
-            const newHighlightedSquares = [];
-    
-            const addHighlightedSquare = (row, col) => {
-                if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && isValidMove(rowIndex, colIndex, row, col)) {
-                    newHighlightedSquares.push({ row, col });
-                }
-            };
-    
-            const checkAdjacentPlayer = (row, col) => {
-                return players.some((player) => player.position.row === row && player.position.col === col);
-            };
-    
-            // Up
-            if (rowIndex > 0 && isValidMove(rowIndex, colIndex, rowIndex - 1, colIndex)) {
-                if (checkAdjacentPlayer(rowIndex - 1, colIndex)) {
-                    addHighlightedSquare(rowIndex - 2, colIndex); // Behind the adjacent player
-                    if (isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 2, colIndex, clickedWalls) || rowIndex-2 < 0) {
-                        if(!isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 1, colIndex - 1, clickedWalls))
-                            addHighlightedSquare(rowIndex - 1, colIndex - 1); // Left of the adjacent player
-                        if(!isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 1, colIndex + 1, clickedWalls))
-                            addHighlightedSquare(rowIndex - 1, colIndex + 1); // Right of the adjacent player
-                    }
-                } else {
-                    addHighlightedSquare(rowIndex - 1, colIndex);
-                }
-            }
-    
-            // Down
-            if (rowIndex < boardSize - 1 && isValidMove(rowIndex, colIndex, rowIndex + 1, colIndex)) {
-                if (checkAdjacentPlayer(rowIndex + 1, colIndex)) {
-                    addHighlightedSquare(rowIndex + 2, colIndex); // Behind the adjacent player
-                    if (isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 2, colIndex, clickedWalls) || rowIndex+2>8) {
-                        if(!isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 1, colIndex - 1, clickedWalls))
-                            addHighlightedSquare(rowIndex + 1, colIndex - 1); // Left of the adjacent player
-                        if(!isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 1, colIndex + 1, clickedWalls))
-                            addHighlightedSquare(rowIndex + 1, colIndex + 1); // Right of the adjacent player
-                    }
-                } else {
-                    addHighlightedSquare(rowIndex + 1, colIndex);
-                }
-            }
-    
-            // Left
-            if (colIndex > 0 && isValidMove(rowIndex, colIndex, rowIndex, colIndex - 1)) {
-                if (checkAdjacentPlayer(rowIndex, colIndex - 1)) {
-                    addHighlightedSquare(rowIndex, colIndex - 2); // Behind the adjacent player
-                    if (isWallBlockingMove(rowIndex, colIndex - 1, rowIndex, colIndex - 2, clickedWalls) || colIndex-2 <0) {
-                        if (!isWallBlockingMove(rowIndex, colIndex - 1, rowIndex - 1, colIndex - 1, clickedWalls))
-                            addHighlightedSquare(rowIndex - 1, colIndex - 1); // Above the adjacent player
-                        if (!isWallBlockingMove(rowIndex, colIndex - 1, rowIndex + 1, colIndex - 1, clickedWalls))
-                            addHighlightedSquare(rowIndex + 1, colIndex - 1); // Below the adjacent player
-                    }
-                } else {
-                    addHighlightedSquare(rowIndex, colIndex - 1);
-                }
-            }
-    
-            // Right
-            if (colIndex < boardSize - 1 && isValidMove(rowIndex, colIndex, rowIndex, colIndex + 1)) {
-                if (checkAdjacentPlayer(rowIndex, colIndex + 1)) {
-                    addHighlightedSquare(rowIndex, colIndex + 2); // Behind the adjacent player
-                    if (isWallBlockingMove(rowIndex, colIndex + 1, rowIndex, colIndex + 2, clickedWalls) || colIndex+2 > 8) {
-                        if (!isWallBlockingMove(rowIndex, colIndex + 1, rowIndex - 1, colIndex + 1, clickedWalls))
-                            addHighlightedSquare(rowIndex - 1, colIndex + 1); // Above the adjacent player
-                        if (!isWallBlockingMove(rowIndex, colIndex + 1, rowIndex + 1, colIndex + 1, clickedWalls))
-                            addHighlightedSquare(rowIndex + 1, colIndex + 1); // Below the adjacent player
-                    }
-                } else {
-                    addHighlightedSquare(rowIndex, colIndex + 1);
-                }
-            }
-    
+        if(currentPlayer.position.row === rowIndex && currentPlayer.position.col === colIndex){
+            const newHighlightedSquares = getPossibleMoveActions(rowIndex, colIndex, state.players, clickedWalls);
+
             setState((prevState) => ({
                 ...prevState,
                 highlightedSquares: newHighlightedSquares,
             }));     
             return newHighlightedSquares;
         }
+       
+        
     };
     
 
@@ -311,8 +264,7 @@ const GameLogic = (boardSize) => {
             return;
         }
 
-        const player2Dist = bfs(players[0].position, 8, boardSize, state.clickedWalls);
-        const player1Dist = bfs(players[1].position, 0, boardSize, state.clickedWalls);
+        
 
         const newPlayers = players.map((player, index) => {
             const updatedPlayer = player.name === initialPlayer 
@@ -321,11 +273,17 @@ const GameLogic = (boardSize) => {
             
             // Update shortestWay based on the index
             if (index === 0) {
-                return { ...updatedPlayer, shortestWay: player2Dist };
+                return updatedPlayer;
             } else if (index === 1) {
-                return { ...updatedPlayer, shortestWay: player1Dist };
+                return updatedPlayer;
             }
         });
+
+        const player1Dist = bfs(newPlayers[0].position, newPlayers[0].goalRow, boardSize, state.clickedWalls, newPlayers);
+        const player2Dist = bfs(newPlayers[1].position, newPlayers[1].goalRow, boardSize, state.clickedWalls, newPlayers);
+
+        newPlayers[0].shortestWay = player1Dist;
+        newPlayers[1].shortestWay = player2Dist;
 
         const nextPlayer = initialPlayer === 'player1' ? 'player2' : 'player1';
         setState((prevState) => ({
@@ -390,9 +348,8 @@ const GameLogic = (boardSize) => {
         const player1Start = players.find(player => player.name === 'player1').position;
         const player2Start = players.find(player => player.name === 'player2').position;
     
-
-        const player1Dist = bfs(player1Start, 0, boardSize, newClickedWalls);
-        const player2Dist = bfs(player2Start, 8, boardSize, newClickedWalls);
+        const player1Dist = bfs(player1Start, 0, boardSize, newClickedWalls, state.players);
+        const player2Dist = bfs(player2Start, 8, boardSize, newClickedWalls, state.players);
 
         if (player1Dist.length!==0 && player2Dist.length!==0) {
             setState((prevState) => ({
@@ -406,9 +363,9 @@ const GameLogic = (boardSize) => {
                     
                     // Update shortestWay based on the index
                     if (index === 0) {
-                        return { ...updatedPlayer, shortestWay: player2Dist };
-                    } else if (index === 1) {
                         return { ...updatedPlayer, shortestWay: player1Dist };
+                    } else if (index === 1) {
+                        return { ...updatedPlayer, shortestWay: player2Dist };
                     }
                 }),                
                 initialPlayer: prevState.initialPlayer === 'player1' ? 'player2' : 'player1',
@@ -469,16 +426,93 @@ const GameLogic = (boardSize) => {
         }));
     };
 
+    const getPossibleMoveActions = (rowIndex, colIndex, players, clickedWalls) => {
+        const { initialPlayer } = state;
+    
+        const possibleMoveArray = [];
 
-    const getPossibleActions = (player) => {
-        const { players } = state;
-        const moves = handlePlayerClick(player.position.row, player.position.col);
-        const possibleWallActions = [];
-        
-        
-        const currentPlayer = players.find((player) => player.name === 'player2');
+    
+            const addToPossibleMoveArray = (row, col) => {
+                if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && isValidMove(rowIndex, colIndex, row, col)) {
+                    possibleMoveArray.push({ row, col });
+                }
+            };
+    
+            const checkAdjacentPlayer = (row, col) => {
+                return players.some((player) => player.position.row === row && player.position.col === col && player.name !== initialPlayer);
+            };
+    
+            // Up
+            if (rowIndex > 0 && isValidMove(rowIndex, colIndex, rowIndex - 1, colIndex) && !isWallBlockingMove(rowIndex, colIndex, rowIndex - 1,colIndex,clickedWalls)) {
+                if (checkAdjacentPlayer(rowIndex - 1, colIndex)) {
+                    addToPossibleMoveArray(rowIndex - 2, colIndex); // Behind the adjacent player
+                    if (isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 2, colIndex, clickedWalls) || rowIndex-2 < 0) {
+                        if(!isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 1, colIndex - 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex - 1, colIndex - 1); // Left of the adjacent player
+                        if(!isWallBlockingMove(rowIndex - 1, colIndex, rowIndex - 1, colIndex + 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex - 1, colIndex + 1); // Right of the adjacent player
+                    }
+                } else {
+                    if(!isWallBlockingMove()){
+                        addToPossibleMoveArray(rowIndex - 1, colIndex);
+                    }
+                }
+            }
+    
+            // Down
+            if (rowIndex < boardSize - 1 && isValidMove(rowIndex, colIndex, rowIndex + 1, colIndex) && !isWallBlockingMove(rowIndex, colIndex, rowIndex+1,colIndex,clickedWalls)) {
+                if (checkAdjacentPlayer(rowIndex + 1, colIndex)) {
+                    addToPossibleMoveArray(rowIndex + 2, colIndex); // Behind the adjacent player
+                    if (isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 2, colIndex, clickedWalls) || rowIndex+2>8) {
+                        if(!isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 1, colIndex - 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex + 1, colIndex - 1); // Left of the adjacent player
+                        if(!isWallBlockingMove(rowIndex + 1, colIndex, rowIndex + 1, colIndex + 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex + 1, colIndex + 1); // Right of the adjacent player
+                    }
+                } else {
+                        addToPossibleMoveArray(rowIndex + 1, colIndex);
+                }
+            }
+    
+            // Left
+            if (colIndex > 0 && isValidMove(rowIndex, colIndex, rowIndex, colIndex - 1) && !isWallBlockingMove(rowIndex, colIndex, rowIndex, colIndex - 1,clickedWalls)) {
+                if (checkAdjacentPlayer(rowIndex, colIndex - 1)) {
+                    addToPossibleMoveArray(rowIndex, colIndex - 2); // Behind the adjacent player
+                    if (isWallBlockingMove(rowIndex, colIndex - 1, rowIndex, colIndex - 2, clickedWalls) || colIndex-2 <0) {
+                        if (!isWallBlockingMove(rowIndex, colIndex - 1, rowIndex - 1, colIndex - 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex - 1, colIndex - 1); // Above the adjacent player
+                        if (!isWallBlockingMove(rowIndex, colIndex - 1, rowIndex + 1, colIndex - 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex + 1, colIndex - 1); // Below the adjacent player
+                    }
+                } else {
+                    addToPossibleMoveArray(rowIndex, colIndex - 1);
+                }
+            }
+    
+            // Right
+            if (colIndex < boardSize - 1 && isValidMove(rowIndex, colIndex, rowIndex, colIndex + 1) && !isWallBlockingMove(rowIndex, colIndex, rowIndex, colIndex + 1,clickedWalls)) {
+                if (checkAdjacentPlayer(rowIndex, colIndex + 1)) {
+                    addToPossibleMoveArray(rowIndex, colIndex + 2); // Behind the adjacent player
+                    if (isWallBlockingMove(rowIndex, colIndex + 1, rowIndex, colIndex + 2, clickedWalls) || colIndex+2 > 8) {
+                        if (!isWallBlockingMove(rowIndex, colIndex + 1, rowIndex - 1, colIndex + 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex - 1, colIndex + 1); // Above the adjacent player
+                        if (!isWallBlockingMove(rowIndex, colIndex + 1, rowIndex + 1, colIndex + 1, clickedWalls))
+                            addToPossibleMoveArray(rowIndex + 1, colIndex + 1); // Below the adjacent player
+                    }
+                } else {
+                    addToPossibleMoveArray(rowIndex, colIndex + 1);
+                }
+            }
+            
+        return possibleMoveArray;
+    }
+
+    const getPossibleWallActions = (player) => {
+        const {clickedWalls, clickedSpaces} = state;
+
+        const possibleWallActions = []; 
         // Generate possible wall actions 
-        if(currentPlayer.wallsLeft>0){       
+        if(player.wallsLeft>0){       
             for (let row = 0; row < boardSize - 1; row++) {
                 for (let col = 0; col < boardSize - 1; col++) {
                     const vwallId = `vwall-${row}-${col}`;
@@ -486,23 +520,36 @@ const GameLogic = (boardSize) => {
                     const hwallId = `hwall-${row}-${col}`;
                     const hNextWallId = `hwall-${row}-${col+1}`;
                     const spaceId = `space-${row}-${col}`;
-        
-                    if (!state.clickedWalls.includes(vwallId) && !state.clickedWalls.includes(vBelowWallId) && !state.clickedSpaces.includes(spaceId)) {
+
+                    if (!clickedWalls.includes(vwallId) && !clickedWalls.includes(vBelowWallId) && !clickedSpaces.includes(spaceId)) {
                         possibleWallActions.push({ type: 'wall', id: vwallId, orientation: 'vertical' });
                     }
-        
-                    if (!state.clickedWalls.includes(hwallId) && !state.clickedWalls.includes(hNextWallId) && !state.clickedSpaces.includes(spaceId)) {
+
+                    if (!clickedWalls.includes(hwallId) && !clickedWalls.includes(hNextWallId) && !clickedSpaces.includes(spaceId)) {
                         possibleWallActions.push({ type: 'wall', id: hwallId, orientation: 'horizontal' });
                     }
                 }
             }
         }
+        return possibleWallActions;
+    }
+
+    const getPossibleActions = (player) => {
+
+        const moves = getPossibleMoveActions(player.position.row, player.position.col, state.players, state.clickedWalls);
+        const possibleWallActions = getPossibleWallActions(player);
         
         return { moves, putWall: possibleWallActions };
     };
 
     const updatePossibleActions = () => {
-        const player = state.players[0];
+        let player;
+        if(state.playAs === 'player1'){
+            player = state.players[1];
+        }else{
+            player = state.players[0];
+        }
+
         const newPossibleActions = getPossibleActions(player);
         // Update state with new possibleActions
         setState(prevState => ({

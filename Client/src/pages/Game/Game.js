@@ -7,7 +7,6 @@ import { useLocation } from 'react-router-dom';
 
 const Game = (props) => {
     const location = useLocation();
-    const { player1Name, player2Name, mode } = location.state || {};
 
     const boardSize = 9;
     const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick } = GameLogic(boardSize);
@@ -20,11 +19,11 @@ const Game = (props) => {
                 <div className='game-content'>
                     <div className='player-section'>
                         <div className='up'>
-                            <p className='name'>Player 2: {mode === 'AI' ? 'AI' : player2Name}</p>
+                            <p className='name'>Player 2: {state.nickNames[1]}</p>
                             <WallsLeft wallsLeft={players.find(player => player.name === 'player2').wallsLeft} player="player2s" />
                         </div>
                         <div className='down'>
-                            <p className='name'>Player 1: {player1Name}</p>
+                            <p className='name'>Player 1: {state.nickNames[0]}</p>
                             <WallsLeft wallsLeft={players.find(player => player.name === 'player1').wallsLeft} player="player1s" />
                         </div>
                     </div>
