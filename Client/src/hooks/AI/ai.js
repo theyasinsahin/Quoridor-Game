@@ -11,6 +11,7 @@ class TreeNode {
         this.uctConst = uctConst;
     }
 
+
     get isLeaf() {
         return this.children.length === 0;
     }
@@ -19,9 +20,13 @@ class TreeNode {
         return this.numSims === 0;
     }
 
+    // References: 
+    // Levente Kocsis, Csaba Szepesva ́ri (2006 ) "Bandit based Monte-Carlo Planning"
+    // Peter Auer, Cesa-Bianchi, Fischer (2002) "Finite-time Analysis of the Multiarmed Bandit Problem"
+    // Do google search for "monte carlo tree search uct"
     get uct() {
         if (this.parent === null || this.parent.numSims === 0) {
-            throw "UCT_ERROR";
+            throw "UCT_ERROR"
         }
         if (this.numSims === 0) {
             return Infinity;
@@ -34,7 +39,7 @@ class TreeNode {
     }
 
     get maxUCTChild() {
-        let maxUCTIndices = [];
+        let maxUCTIndices;
         let maxUCT = -Infinity;
         for (let i = 0; i < this.children.length; i++) {
             const uct = this.children[i].uct;
@@ -46,14 +51,15 @@ class TreeNode {
             }
         }
         const maxUCTIndex = randomChoice(maxUCTIndices);
+        //const maxUCTIndex = maxUCTIndices[0];
         return this.children[maxUCTIndex];
     }
 
-    get maxWinRateChild() {
+    get maxWinRateChild(){
         let maxWinRateChildIdx;
         let maxWinRate = -Infinity;
         for (let i = 0; i < this.children.length; i++) {
-            if (maxWinRate < this.children[i].winRate) {
+            if(maxWinRate < this.children[i].winRate){
                 maxWinRate = this.children[i].winRate;
                 maxWinRateChildIdx = i;
             }
@@ -61,11 +67,11 @@ class TreeNode {
         return this.children[maxWinRateChildIdx];
     }
 
-    get maxSimsChild() {
+    get maxSimsChild(){
         let maxSimsChildIdx;
         let maxSims = -Infinity;
         for (let i = 0; i < this.children.length; i++) {
-            if (maxSims < this.children[i].numSims) {
+            if(maxSims < this.children[i].numSims){
                 maxSims = this.children[i].numSims;
                 maxSimsChildIdx = i;
             }
@@ -84,153 +90,187 @@ class TreeNode {
     }
 }
 
-class MonteCarloTreeSearch {
+class MonteCarloTreeSearch{
     constructor(state, uctConst){
-        this.root = new TreeNode(null, null, uctConst);
-        this.state = JSON.parse(JSON.stringify(state)); // deep copy
+        this.root = new TreeNode(null, null, this.uctConst);
+        this.state = state;
         this.uctConst = uctConst;
         this.totalNumOfSims = 0;
     }
 
     search(numOfSims){
+        const uctConst = this.uctConst;
+
+        let currentNode = this.root;
         const limitOfTotalNumOfSims = this.totalNumOfSims + numOfSims;
       
-        while (this.totalNumOfSims < limitOfTotalNumOfSims) {
-            let currentNode = this.root;
+        while(this.totalNumOfSims < limitOfTotalNumOfSims) {
+            // Selection // Ağacı gezerek bir yaprak düğüm bulur.
+            if(currentNode.isTerminal){
+                this.rollout(currentNode);
+                currentNode = this.root;
+            } else if (currentNode.isLeaf){
+                if(currentNode.isNew){
+                    this.rollout(currentNode);
+                    currentNode = this.root;
+                } else {
+                    // Expansion // Seçilen yaprak düğümüne yeni çocuk düğüm ekler
+                    const simulationGame = this.getSimulationGameAtNode(currentNode);
+                    let move, childNode;
+                    const moves = getPossibleMoveActions(this.state);
+                    for (let i = 0; i < moves.length; i++) {
+                        move = {type: "move", row:moves[i].row, col: moves[i].col};
+                        childNode = new TreeNode(move, currentNode, uctConst);
+                        currentNode.addChild(childNode);
+                        console.log("child added");
+                    }
+                    const walls = getPossibleWallActions(this.state);
+                    let currentPlayer = simulationGame.players.find(player => player.name === simulationGame.initialPlayer);
 
-            // Selection and Expansion
-            while (!currentNode.isTerminal && !currentNode.isNew) {
-                currentNode = currentNode.maxUCTChild;
-                if (currentNode.isLeaf && !currentNode.isNew) {
-                    this.expandNode(currentNode);
+                    if(currentPlayer.wallsLeft > 0){
+                        for (let i = 0; i < walls.length; i++) {
+                            move = walls[i];
+                            childNode = new TreeNode(move, currentNode, uctConst);
+                            currentNode.addChild(childNode);
+                            console.log("child added");
+                        }
+                    }
+                    this.rollout(randomChoice(currentNode.children));
+                    currentNode = this.root;
                 }
+            }else {
+                currentNode = currentNode.maxUCTChild;
             }
-
-            // Rollout and Backpropagation
-            this.rollout(currentNode);
-            console.log(this.totalNumOfSims, "<", limitOfTotalNumOfSims);
-        }
-    }
-
-    expandNode(node) {
-        console.log("I entered expandNode");
-        const simulationGame = this.getSimulationGameAtNode(node);
-        const moves = getPossibleMoveActions(simulationGame);
-        const currentPlayer = simulationGame.players.find(player => player.name === simulationGame.initialPlayer);
-
-        moves.forEach(move => {
-            const childNode = new TreeNode({type: "move", row: move.row, col: move.col}, node, this.uctConst);
-            node.addChild(childNode);
-        });
-
-        if (currentPlayer.wallsLeft > 0) {
-            const walls = getPossibleWallActions(simulationGame);
-            walls.forEach(wall => {
-                const childNode = new TreeNode(wall, node, this.uctConst);
-                node.addChild(childNode);
-            });
         }
     }
 
     selectBestMove(){
         const best = this.root.maxSimsChild;
-        console.log("best: ", best);
+        console.log("best: ",best);
         return {move: best.move, winRate: best.winRate};
     }
 
     rollout(node){
         this.totalNumOfSims++;
-        console.log("I entered rollout function");
-        const simulationGame = JSON.parse(JSON.stringify(this.state)); // deep copy
+        const simulationGame = {...this.state};
 
-        // Early exit if terminal
-        if (simulationGame.players[0].position.row === simulationGame.players[0].goalRow ||
-            simulationGame.players[1].position.row === simulationGame.players[1].goalRow) {
+        // the pawn of this node is the pawn who moved immediately before,
+        const nodePawn = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
+
+        if((simulationGame.players[0].position.row === simulationGame.players[0].goalRow) || simulationGame.players[1].position.row === simulationGame.players[1].goalRow){
             node.isTerminal = true;
-            return;
         }
 
-        const nodePawn = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
-        while (!(simulationGame.players[0].position.row === simulationGame.players[0].goalRow || 
-                 simulationGame.players[1].position.row === simulationGame.players[1].goalRow)) {
+        
+        while(!((simulationGame.players[0].position.row === simulationGame.players[0].goalRow) || (simulationGame.players[1].position.row === simulationGame.players[1].goalRow))){
             const moves = getPossibleMoveActions(simulationGame);
+
             const walls = getPossibleWallActions(simulationGame);
-            
             const currentPlayer = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
 
-            if (currentPlayer.wallsLeft > 0 && Math.random() < 0.6) {
-                const action = randomChoice(walls) || {type: "move", row: moves[0].row, col: moves[0].col};
-                this.getAction(simulationGame, action);
-            } else {
+            if(currentPlayer.wallsLeft > 0){
+                if(Math.random() < 0.6){ //60% ihtimalle hareket edecek
+                    const movePosition = randomChoice(moves);
+                    const action = {type: "move", row: movePosition.row, col: movePosition.col};
+                    this.getAction(simulationGame, action);
+                    
+                }else{
+                    let action = randomChoice(walls);
+                    if(action){
+                        this.getAction(simulationGame, action);
+                    }else{
+                        const movePosition = randomChoice(moves);
+                        action = {type: "move", row: movePosition.row, col: movePosition.col};
+                        this.getAction(simulationGame, action);
+                    }
+                    
+                }
+            }else{
                 const movePosition = randomChoice(moves);
-                this.getAction(simulationGame, {type: "move", row: movePosition.row, col: movePosition.col});
+                const action = {type: "move", row: movePosition.row, col: movePosition.col};
+                this.getAction(simulationGame, action);
             }
+
             
         }
 
-        node.isTerminal = true;
-        this.backpropagate(node, simulationGame, nodePawn);
-    }
-
-    backpropagate(node, simulationGame, nodePawn){
-        console.log("I entered backpropagate");
+        // Backpropagation
         let ancestor = node;
-        let ancestorPawnIndex = nodePawn.name === 'player1' ? 0 : 1;
-        const winner = simulationGame.players.find(player => player.position.row === player.goalRow);
-        const winnerIndex = winner.name === 'player1' ? 0 : 1;
-
-        while (ancestor !== null) {
+        let ancestorPawnIndex = nodePawn.name === 'player1' ? 0:1;
+        while(ancestor !== null){
             ancestor.numSims++;
-            if (winnerIndex === ancestorPawnIndex) {
+            const { players } = simulationGame;
+            const winner = players.find(player => player.position.row === player.goalRow);
+            let winnerIndex;
+            if(winner){
+                winnerIndex = winner.name === 'player1' ? 0:1;
+            }
+            if(winnerIndex === ancestorPawnIndex) {
                 ancestor.numWins += 1;
             }
             ancestor = ancestor.parent;
-            ancestorPawnIndex = (ancestorPawnIndex + 1) % 2; 
+            ancestorPawnIndex = (ancestorPawnIndex+1) % 2; 
         }
     }
 
     getSimulationGameAtNode(node){
-        const simulationGame = JSON.parse(JSON.stringify(this.state)); // deep copy
+        const simulationGame = {...this.state};
         const stack = [];
 
         let ancestor = node;
-        while (ancestor.parent !== null) {
+        while(ancestor.parent !== null){
             stack.push(ancestor.move);
             ancestor = ancestor.parent;
         }
 
-        while (stack.length > 0) {
+        while(stack.length > 0){
             const move = stack.pop();
             this.getAction(simulationGame, move);
         }
 
         return simulationGame;
     }
-
+    
+    
     getAction(simulationGame, action){
         let currentPlayer = simulationGame.players.find(player => player.name === simulationGame.initialPlayer);
-
+    
         // Move Part
-        if (action.type === "move") {
-            currentPlayer.position = {row: action.row, col: action.col};
+        if(action.type === "move"){
+            if(currentPlayer.name === "player1"){
+                simulationGame.players[0].position = {row: action.row, col: action.col};
+            }else if(currentPlayer.name === "player2"){
+                simulationGame.players[1].position = {row: action.row, col: action.col};
+            }
         }
         // Wall Part
-        else if (action.type === "wall") {
+        else if(action.type === "wall"){
             const parts = action.id.split('-');
             const row = parseInt(parts[1], 10);
             const col = parseInt(parts[2], 10);
             const spaceId = `space-${row}-${col}`;
-            if (action.orientation === "vertical") {
+            if(action.orientation === "vertical"){
                 const belowWall = `vwall-${row + 1}-${col}`;
-                simulationGame.clickedWalls.push(action.id, belowWall);
+                simulationGame.clickedWalls.push(action.id);
+                simulationGame.clickedWalls.push(belowWall);
+    
                 simulationGame.clickedSpaces.push(spaceId);
-            } else if (action.orientation === "horizontal") {
+    
+            }else if(action.orientation === "horizontal"){
                 const nextWall = `hwall-${row}-${col + 1}`;
-                simulationGame.clickedWalls.push(action.id, nextWall);
+                simulationGame.clickedWalls.push(action.id);
+                simulationGame.clickedWalls.push(nextWall);
+    
                 simulationGame.clickedSpaces.push(spaceId);
+    
             }
-
-            currentPlayer.wallsLeft -= 1;
+    
+    
+            if(currentPlayer.name === "player1"){
+                simulationGame.players[0].wallsLeft -= 1;
+            }else if(currentPlayer.name === "player2"){
+                simulationGame.players[1].wallsLeft -= 1;
+            }
         }
 
         simulationGame.initialPlayer = simulationGame.initialPlayer === 'player1' ? 'player2' : 'player1';
@@ -266,7 +306,7 @@ class AI {
         //postMessage(0); // Döngünün başladığını haber verir.
         for (let i = 0; i < nBatch; i++) {
             mcts.search(nBatch);
-            console.log("Search'ün yüzde ", i+1, "kadarı tamamlandı");
+            //console.log("Search'ün yüzde ", i+1, "kadarı tamamlandı");
             //postMessage((i+1)/nSearch); işlemdeki ilerlemeyi haberdar eder
         }
 
