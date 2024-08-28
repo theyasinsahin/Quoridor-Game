@@ -1,3 +1,6 @@
+const _ = require('lodash');  // CommonJS (Node.js)
+
+
 const BOARD_SIZE = 9;
 
 class TreeNode {
@@ -101,18 +104,17 @@ class MonteCarloTreeSearch{
     search(numOfSims){
         const uctConst = this.uctConst;
 
-        let currentNode = this.root;
+        let currentNode = _.cloneDeep(this.root);
         const limitOfTotalNumOfSims = this.totalNumOfSims + numOfSims;
       
         while(this.totalNumOfSims < limitOfTotalNumOfSims) {
             // Selection // Ağacı gezerek bir yaprak düğüm bulur.
             if(currentNode.isTerminal){
                 this.rollout(currentNode);
-                currentNode = this.root;
+                currentNode = _.cloneDeep(this.root);
             } else if (currentNode.isLeaf){
                 if(currentNode.isNew){
                     this.rollout(currentNode);
-                    currentNode = this.root;
                 } else {
                     // Expansion // Seçilen yaprak düğümüne yeni çocuk düğüm ekler
                     const simulationGame = this.getSimulationGameAtNode(currentNode);
@@ -136,7 +138,6 @@ class MonteCarloTreeSearch{
                         }
                     }
                     this.rollout(randomChoice(currentNode.children));
-                    currentNode = this.root;
                 }
             }else {
                 currentNode = currentNode.maxUCTChild;
@@ -146,13 +147,12 @@ class MonteCarloTreeSearch{
 
     selectBestMove(){
         const best = this.root.maxSimsChild;
-        console.log("best: ",best);
         return {move: best.move, winRate: best.winRate};
     }
 
     rollout(node){
         this.totalNumOfSims++;
-        const simulationGame = {...this.state};
+        const simulationGame = _.cloneDeep(this.state);
 
         // the pawn of this node is the pawn who moved immediately before,
         const nodePawn = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
@@ -191,16 +191,17 @@ class MonteCarloTreeSearch{
                 this.getAction(simulationGame, action);
             }
 
-            
+            console.log("b");
         }
 
         // Backpropagation
         let ancestor = node;
         let ancestorPawnIndex = nodePawn.name === 'player1' ? 0:1;
+        const { players } = simulationGame;
+        const winner = players.find(player => player.position.row === player.goalRow);
         while(ancestor !== null){
             ancestor.numSims++;
-            const { players } = simulationGame;
-            const winner = players.find(player => player.position.row === player.goalRow);
+            
             let winnerIndex;
             if(winner){
                 winnerIndex = winner.name === 'player1' ? 0:1;
@@ -214,7 +215,7 @@ class MonteCarloTreeSearch{
     }
 
     getSimulationGameAtNode(node){
-        const simulationGame = {...this.state};
+        const simulationGame = _.cloneDeep(this.state);
         const stack = [];
 
         let ancestor = node;
