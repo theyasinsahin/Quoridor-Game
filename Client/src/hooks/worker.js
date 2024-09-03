@@ -1,5 +1,5 @@
 import actionCalculate from "./Bot/bot";
-import AI from "./AI/ai";
+import AI from "./ai";
 
 onmessage = async function(event) {
     console.log("workera girdim");
