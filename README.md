@@ -60,15 +60,15 @@ To install and run the project locally:
 Navigate to the project directory:
   ```bash
   cd quoridor-game
-
+```
 Install dependencies:
   ```bash
   npm install
-
+```
 Start the development server:
   ```bash
   npm start
-
+```
 ##Future Enhancements
 Improved AI Performance: Optimize the MCTS algorithm for faster decision-making.
 Multiplayer Mode: Add real-time multiplayer using WebSockets or Firebase.
