@@ -1,6 +1,3 @@
-
-markdown
-Copy code
 # Quoridor Game
 
 ![Quoridor Game](path_to_screenshot.png)
@@ -61,21 +58,18 @@ To install and run the project locally:
    ```bash
    git clone https://github.com/yourusername/quoridor-game.git
 Navigate to the project directory:
+  ```bash
+  cd quoridor-game
 
-bash
-Copy code
-cd quoridor-game
 Install dependencies:
+  ```bash
+  npm install
 
-bash
-Copy code
-npm install
 Start the development server:
+  ```bash
+  npm start
 
-bash
-Copy code
-npm start
-Future Enhancements
+##Future Enhancements
 Improved AI Performance: Optimize the MCTS algorithm for faster decision-making.
 Multiplayer Mode: Add real-time multiplayer using WebSockets or Firebase.
 Customizable Themes: Allow users to customize the board and player colors.
