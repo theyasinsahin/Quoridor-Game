@@ -106,6 +106,7 @@ class MonteCarloTreeSearch{
 
         let currentNode = this.root;
         const limitOfTotalNumOfSims = this.totalNumOfSims + numOfSims;
+        
       
         while(this.totalNumOfSims < limitOfTotalNumOfSims) {
             // Selection // Ağacı gezerek bir yaprak düğüm bulur.
@@ -118,19 +119,22 @@ class MonteCarloTreeSearch{
                 } else {
                     // Expansion // Seçilen yaprak düğümüne yeni çocuk düğüm ekler
                     const simulationGame = this.getSimulationGameAtNode(currentNode);
+                    let currentPlayer = simulationGame.players.find(player => player.name === simulationGame.initialPlayer);
+                    let opponentPlayer = simulationGame.players.find(player => player.name !== simulationGame.initialPlayer);
+
                     let move, childNode;
-                    const moves = getPossibleMoveActions(this.state);
-                    for (let i = 0; i < moves.length; i++) {
-                        move = {type: "move", row:moves[i].row, col: moves[i].col};
+                    //const moves = getPossibleMoveActions(simulationGame);
+                    const bestPaths = bfsAllShortestPaths(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls);
+                    for (let i = 0; i < bestPaths.length; i++) {
+                        move = {type: "move", row:bestPaths[i][0][1].row, col: bestPaths[i][0][1].col};
                         childNode = new TreeNode(move, currentNode, uctConst);
                         currentNode.addChild(childNode);
                     }
-                    const walls = getPossibleWallActions(this.state);
-                    let currentPlayer = simulationGame.players.find(player => player.name === simulationGame.initialPlayer);
-
+                    const walls = getPossibleWallActions(simulationGame);
+                    const bestWalls = findAllBestWalls(opponentPlayer, simulationGame.players, bestPaths[0], walls, simulationGame.clickedWalls);
                     if(currentPlayer.wallsLeft > 0){
-                        for (let i = 0; i < walls.length; i++) {
-                            move = walls[i];
+                        for (let i = 0; i < bestWalls.length; i++) {
+                            move = bestWalls[i];
                             childNode = new TreeNode(move, currentNode, uctConst);
                             currentNode.addChild(childNode);
                         }
@@ -167,34 +171,50 @@ class MonteCarloTreeSearch{
             const currentPlayer = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
             const opponentPlayer = simulationGame.initialPlayer === 'player1' ? simulationGame.players[1] : simulationGame.players[0];
             
-            
-            if(currentPlayer.wallsLeft > 0){
-                if(Math.random() < 0.6){ //60% ihtimalle hareket edecek
-                    const movePosition = randomChoice(moves);
-                    const action = {type: "move", row: movePosition.row, col: movePosition.col};
-                    this.getAction(simulationGame, action);
-                    
-                }else{
-                    let action = randomChoice(walls);
-                    if(action){
-                        this.getAction(simulationGame, action);
-                    }else{
-                        const movePosition = randomChoice(moves);
-                        action = {type: "move", row: movePosition.row, col: movePosition.col};
-                        this.getAction(simulationGame, action);
-                    }
-                    
-                }
-            }else{
-                const movePosition = randomChoice(moves);
-                const action = {type: "move", row: movePosition.row, col: movePosition.col};
-                this.getAction(simulationGame, action);
-            }
-            
+            const currentPlayerWay = bfs(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls)
+            const opponentPlayerWay = bfs(opponentPlayer.position, opponentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls)
+            const currentPlayerDist = currentPlayer.length;
+            const opponentPlayerDist = opponentPlayer.length;
             
 
-            
-            
+            if (currentPlayerDist < opponentPlayerDist) {
+                let bestAction = null;
+                let shortestDistance = Infinity;
+                moves.forEach(possibleMoveAction => {
+                    // Simulate the move
+                    const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
+                    const newDistance = bfs(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls).length;
+        
+                    if (newDistance < shortestDistance) {
+                        shortestDistance = newDistance;
+                        bestAction = possibleMoveAction;
+                    }
+                });
+                const action = { type: "move", col: bestAction.col, row: bestAction.row };
+                this.getAction(simulationGame, action);
+            } else {
+                const bestWall = findBestWall(opponentPlayer, simulationGame.players, opponentPlayerWay, walls, simulationGame.clickedWalls, bfs);
+                if (bestWall) {
+                    const action = { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
+                    this.getAction(simulationGame, action);
+                } else {
+                    // If no valid wall placement found, move instead
+                    let shortestDistance = Infinity;
+                    let bestAction = null;
+                    moves.forEach(possibleMoveAction => {
+                        // Simulate the move
+                        const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
+                        const newDistance = bfs(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls).length;
+        
+                        if (newDistance < shortestDistance) {
+                            shortestDistance = newDistance;
+                            bestAction = possibleMoveAction;
+                        }
+                    });
+                    const action = { type: "move", col: bestAction.col, row: bestAction.row };
+                    this.getAction(simulationGame, action);
+                }
+            }
         }
 
         // Backpropagation
@@ -293,7 +313,10 @@ class AI {
         const d0 = new Date();
         const currentPlayer = state.players.find((player) => player.name === state.initialPlayer);
         const opponentPlayer = state.players.find((player) => player.name !== state.initialPlayer);
+        const currentPlayerWay = bfs(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, state.clickedWalls);
 
+        const possibleWallActions = getPossibleWallActions(state);
+       
         // heuristic:
         // for first move of each pawn
         // make move to best option
@@ -342,7 +365,7 @@ class AI {
         //postMessage(0); // Döngünün başladığını haber verir.
         for (let i = 0; i < nBatch; i++) {
             mcts.search(nBatch);
-            //console.log("Search'ün yüzde ", i+1, "kadarı tamamlandı");
+            //console.log("Searh'ün", (nSearch/nBatch), "kadarı tamamlandı");
             //postMessage((i+1)/nSearch); işlemdeki ilerlemeyi haberdar eder
         }
 
@@ -514,6 +537,92 @@ const getPossibleWallActions = (state) => {
     return possibleWallActions;
 }
 
+const bfsAllShortestPaths = (start, goalRow, boardSize, walls) => {
+    const directions = [
+        { row: -1, col: 0 }, // up
+        { row: 1, col: 0 },  // down
+        { row: 0, col: -1 }, // left
+        { row: 0, col: 1 }   // right
+    ];
+
+    const queue = [start];
+    const visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
+    const distance = Array.from({ length: boardSize }, () => Array(boardSize).fill(Infinity));
+    const previous = {}; // Object to store previous positions for multiple paths
+
+    visited[start.row][start.col] = true;
+    distance[start.row][start.col] = 0;
+    previous[`${start.row},${start.col}`] = [];
+
+    let shortestPaths = [];
+    let minDistance = Infinity;
+
+    while (queue.length > 0) {
+        const { row, col } = queue.shift();
+
+        if (row === goalRow) {
+            if (distance[row][col] < minDistance) {
+                minDistance = distance[row][col];
+                shortestPaths = []; // Clear paths since we're focusing on shortest ones
+            }
+            if (distance[row][col] === minDistance) {
+                shortestPaths.push(reconstructPathForAllPaths(previous, start, { row, col })); // Collect path
+            }
+            continue; // Continue to explore other nodes
+        }
+
+        for (const direction of directions) {
+            const newRow = row + direction.row;
+            const newCol = col + direction.col;
+
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize && !visited[newRow][newCol]) {
+                if (!isWallBlockingMove(row, col, newRow, newCol, walls) && isValidMove(row, col, newRow, newCol, walls)) {
+                    const newDistance = distance[row][col] + 1;
+
+                    if (newDistance <= distance[newRow][newCol]) {
+                        if (newDistance < distance[newRow][newCol]) {
+                            queue.push({ row: newRow, col: newCol });
+                            visited[newRow][newCol] = true;
+                        }
+
+                        distance[newRow][newCol] = newDistance;
+
+                        if (!previous[`${newRow},${newCol}`]) {
+                            previous[`${newRow},${newCol}`] = [];
+                        }
+
+                        previous[`${newRow},${newCol}`].push({ row, col }); // Track all possible previous positions
+                    }
+                }
+            }
+        }
+    }
+
+    return shortestPaths; // Return all the shortest paths found
+};
+
+// Function to reconstruct paths (handles multiple previous nodes)
+const reconstructPathForAllPaths = (previous, start, goal) => {
+    const paths = [];
+    const stack = [[goal, []]]; // Stack to backtrack paths
+
+    while (stack.length > 0) {
+        const [current, path] = stack.pop();
+        const newPath = [current, ...path];
+
+        if (current.row === start.row && current.col === start.col) {
+            paths.push(newPath); // If we've reached the start, save the path
+        } else if (previous[`${current.row},${current.col}`]) {
+            for (const prev of previous[`${current.row},${current.col}`]) {
+                stack.push([prev, newPath]); // Continue backtracking
+            }
+        }
+    }
+
+    return paths;
+};
+
+
 /////////////////  BFS ALGORITHM /////////////////////////
 const bfs = (start, goalRow, boardSize, walls) => {
     const directions = [
@@ -607,7 +716,7 @@ const isValidMove = (currentRow, currentCol, targetRow, targetCol, clickedWalls)
     return true;
 };
 
-const findBestWall = (player, players, playerWay, possibleWallActions, clickedWalls, bfs) => {
+const findBestWall = (player, players, playerWay, possibleWallActions, clickedWalls) => {
     let bestWall = null;
     let maxExtension = 0;
 
@@ -644,7 +753,51 @@ const findBestWall = (player, players, playerWay, possibleWallActions, clickedWa
     return bestWall;
 };
 
-const simulateWallEffect = (player, walls, bfs) => {
+const findAllBestWalls = (player, players, playerWay, possibleWallActions, clickedWalls) => {
+    let AllBestWalls = [];
+    let maxExtension = 0;
+
+    possibleWallActions.forEach(wall => {
+        const id = wall.id;
+        const rowCol = id.split('-');
+        const direction = rowCol[0][0];
+        const row = parseInt(rowCol[1]);
+        const col = parseInt(rowCol[2]);
+
+        let newId;
+        if (direction === "v") {
+            newId = `vwall-${row + 1}-${col}`;
+        } else if (direction === "h") {
+            newId = `hwall-${row}-${col + 1}`;
+        }
+
+        clickedWalls.push(id, newId);
+
+        if (isValidWallPlacement(players, clickedWalls)) {
+            const extendedPath = simulateWallEffect(player, clickedWalls);
+            const extension = extendedPath.length - playerWay.length;
+
+            if (extension > maxExtension) {
+                maxExtension = extension;
+                
+                while(AllBestWalls.length>0){
+                    AllBestWalls.pop();
+                }
+                
+                AllBestWalls.push(wall);
+            }else if(extension === maxExtension){
+                AllBestWalls.push(wall);
+            }
+        }
+
+        clickedWalls.pop();
+        clickedWalls.pop();
+    });
+
+    return AllBestWalls;
+};
+
+const simulateWallEffect = (player, walls) => {
     // Simulate placing the wall and calculate the new shortest path for the opponent
     const start = player.position;
     const newWay = bfs(start, player.goalRow, BOARD_SIZE, walls);
@@ -652,7 +805,7 @@ const simulateWallEffect = (player, walls, bfs) => {
     return newWay;
 };
 
-const isValidWallPlacement = (players, walls, bfs) => {
+const isValidWallPlacement = (players, walls) => {
     const player1 = players[0];
     const player2 = players[1];
 

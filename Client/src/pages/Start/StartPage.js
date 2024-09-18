@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StartPage.css';
 
@@ -8,22 +8,32 @@ const StartPage = (props) => {
     const [player2Name, setPlayer2Name] = useState('');
     const [gameMode, setGameMode] = useState('2Player');
     const [playerRole, setPlayerRole] = useState('player1');
+    const [isThereComp, setIsThereComp] = useState(false);
 
     const navigate = useNavigate();
 
-    /*useEffect(() => {
-        setPlayer1Name(props.user.name);
-    }, [props.user.name]);    */
 
+    
+    
+    
     const handleSubmit = (e) => {
-        navigate('/game', { state: { player1Name, player2Name, mode: gameMode, playerRole } });
+        e.preventDefault();
+        
+        // Online mod dışındaki modlar için normal yönlendirme
+        navigate('/game', { state: { player1Name, player2Name, mode: gameMode, playerRole, isThereComp } });
     };
 
+    
     const handleModeClick = (selectedMode) => {
         if(selectedMode !== gameMode){
+            if(selectedMode === "AI" || selectedMode === "Bot"){
+                setIsThereComp(true);
+            }else{
+                setIsThereComp(false);
+            }
             setGameMode(selectedMode);
             setPlayer2Name('');
-            if (selectedMode === 'AI' || selectedMode === 'Bot') {
+            if (selectedMode === 'AI' || selectedMode === 'Bot' || selectedMode==="Online") {
                 setPlayer2Name(selectedMode); // Set player2Name to 'AI' or 'Bot' when against AI or Bot mode is selected
             }
         }
@@ -41,7 +51,7 @@ const StartPage = (props) => {
                         <input type="text" value={player1Name} onChange={(e) => setPlayer1Name(e.target.value)} required />
                     </label>
                 </div>
-                {(gameMode !== 'AI' && gameMode !== 'Bot') && (
+                {(gameMode !== 'AI' && gameMode !== 'Bot' && gameMode !== 'Online') && (
                 <div>
                     <label>
                         <span>Second Player</span>

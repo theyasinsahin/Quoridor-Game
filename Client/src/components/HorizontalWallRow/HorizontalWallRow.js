@@ -3,7 +3,7 @@ import Wall from '../Wall/Wall';
 import Space from '../Space/space';
 
 const HorizontalWallRow = (props) => {
-  const { rowIndex, onWallHover, hoveredWalls, onWallClick, clickedWalls, clickedSpaces, hoveredSpaces } = props;
+  const { rowIndex, onWallHover, hoveredWalls, onWallClick, clickedWalls, clickedSpaces, hoveredSpaces, initialPlayer, playAs, nickNames, isThereComp } = props;
   const boardSize = 9;
   const row = [];
 
@@ -18,6 +18,10 @@ const HorizontalWallRow = (props) => {
         onWallClick={onWallClick}
         isHovered={hoveredWalls.includes(hWallId)}
         isClicked={clickedWalls.includes(hWallId)}
+        initialPlayer = {initialPlayer}
+        playAs = {playAs}
+        nickNames = {nickNames}
+        isThereComp = {isThereComp}
       />
     );
 

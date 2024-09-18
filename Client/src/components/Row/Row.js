@@ -15,6 +15,8 @@ const Row = (props) => {
     hoveredWalls,
     clickedWalls,
     initialPlayer,
+    playAs,
+    nickNames
   } = props;
   const row = [];
 
@@ -38,6 +40,7 @@ const Row = (props) => {
         highlightedSquares={highlightedSquares}
         movePlayer={movePlayer}
         initialPlayer={initialPlayer}
+        boardSize={boardSize}
       />
     );
 
@@ -52,6 +55,9 @@ const Row = (props) => {
           onWallClick={onWallClick}
           isHovered={hoveredWalls.includes(vWallId)}
           isClicked={clickedWalls.includes(vWallId)}
+          initialPlayer={initialPlayer}
+          playAs = {playAs}
+          nickNames = {nickNames}
         />
       );
     }

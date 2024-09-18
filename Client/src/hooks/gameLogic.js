@@ -6,7 +6,7 @@ const GameLogic = (boardSize) => {
      ///////////////// This is for change the file /////////////
     const navigate = useNavigate();
     const location = useLocation();
-    const { player1Name, player2Name, mode, playerRole } = location.state || { player1Name: 'Player 1', player2Name: 'Player 2', mode: '2Player', playerRole:'player1'};
+    const { player1Name, player2Name, mode, playerRole, isThereComp } = location.state || { player1Name: 'Player 1', player2Name: 'Player 2', mode: '2Player', playerRole:'player1'};
 
 
     const [state, setState] = useState({
@@ -27,18 +27,25 @@ const GameLogic = (boardSize) => {
         clickedWalls: [],
         clickedSpaces: [],
         possibleActions: {},
+        notations: [],
+        isThereComp: isThereComp,
     });
 
     useEffect(() => {
         const player1Way = bfs(state.players[0].position, state.players[0].goalRow, boardSize, state.clickedWalls, state.players);
         const player2Way = bfs(state.players[1].position, state.players[1].goalRow, boardSize, state.clickedWalls, state.players);
 
+        const {players, initialPlayer, clickedWalls} = state;
+        const currentPlayer = players.find((player) => player.name === initialPlayer);
+        const newHighlightedSquares = getPossibleMoveActions(currentPlayer.position.row, currentPlayer.position.col, state.players, clickedWalls);
+
         setState((prevState) => ({
             ...prevState,
             players: [
                 { ...prevState.players[0], shortestWay: player1Way },
                 { ...prevState.players[1], shortestWay: player2Way },
-            ]
+            ],
+            highlightedSquares: newHighlightedSquares
         }))
     }, [])
 
@@ -46,10 +53,25 @@ const GameLogic = (boardSize) => {
 
     useEffect(() => {
         const turn = state.turn + 1;
-        setState((prevState) => ({
-            ...prevState,
-            turn: turn
-        }))
+
+        const {players, initialPlayer, clickedWalls, nickNames, playAs} = state;
+        const currentPlayer = players.find((player) => player.name === initialPlayer);
+
+        if(!((playAs === "player2" && (nickNames[0] === "AI" || nickNames[0] === "Bot") && initialPlayer=== "player1") || ( playAs === "player1" && (nickNames[1] === "AI" || nickNames[1] === "Bot") && initialPlayer === "player2"))){
+            const newHighlightedSquares = getPossibleMoveActions(currentPlayer.position.row, currentPlayer.position.col, state.players, clickedWalls);
+
+            setState((prevState) => ({
+                ...prevState,
+                turn: turn,
+                highlightedSquares: newHighlightedSquares,
+            }))
+        }else{
+            setState((prevState) => ({
+                ...prevState,
+                turn: turn,
+            }))
+        }
+        
     }, [state.initialPlayer])
 
 
@@ -253,7 +275,7 @@ const GameLogic = (boardSize) => {
     
 
     const movePlayer = (rowIndex, colIndex) => {
-        const { players, initialPlayer, nickNames } = state;
+        const { players, initialPlayer, nickNames, notations } = state;
         const currentPlayer = players.find((player) => player.name === initialPlayer);
 
         const currentRow = currentPlayer.position.row;
@@ -264,7 +286,8 @@ const GameLogic = (boardSize) => {
             return;
         }
 
-        
+        const newMove = `${String.fromCharCode(97 + colIndex)}${9 - rowIndex}`;
+
 
         const newPlayers = players.map((player, index) => {
             const updatedPlayer = player.name === initialPlayer 
@@ -291,6 +314,7 @@ const GameLogic = (boardSize) => {
             players: newPlayers,
             initialPlayer: nextPlayer,
             highlightedSquares: [],
+            notations: [...notations, newMove],
         }));
 
         if (initialPlayer === 'player1' && rowIndex === 0) {
@@ -303,7 +327,7 @@ const GameLogic = (boardSize) => {
 
     
     const handleWallClick = (id, orientation, flag) => {
-        const { players, clickedWalls, hoveredWalls, initialPlayer, clickedSpaces } = state;
+        const { players, clickedWalls, hoveredWalls, initialPlayer, clickedSpaces, notations } = state;
         const newClickedWalls = [...clickedWalls];
         const newClickedSpaces = [...clickedSpaces];
         
@@ -317,16 +341,20 @@ const GameLogic = (boardSize) => {
         const row = parseInt(parts[1], 10);
         const col = parseInt(parts[2], 10);
         const spaceId = `space-${row}-${col}`;
+        let newMove;
         if (orientation === 'vertical') {
             const belowWall = `vwall-${row + 1}-${col}`;
             if (hoveredWalls.indexOf(id) !== -1 && clickedSpaces.indexOf(spaceId) === -1 && clickedWalls.indexOf(id) === -1 && flag){
                 newClickedWalls.push(id);
                 newClickedSpaces.push(spaceId);
                 newClickedWalls.push(belowWall);
+                newMove = `v${String.fromCharCode(97 + col)}${9 - row-1}`;
+
             } else if (clickedWalls.indexOf(id) === -1 && clickedSpaces.indexOf(spaceId) === -1 && clickedWalls.indexOf(belowWall) === -1 && flag === false){
                 newClickedWalls.push(id);
                 newClickedSpaces.push(spaceId);
                 newClickedWalls.push(belowWall);
+                newMove = `v${String.fromCharCode(97 + col)}${9 - row-1}`;
             } else {
                 return;
             }
@@ -336,10 +364,12 @@ const GameLogic = (boardSize) => {
                 newClickedWalls.push(id);
                 newClickedSpaces.push(spaceId);
                 newClickedWalls.push(nextWall);
+                newMove = `h${String.fromCharCode(97 + col)}${9 - row-1}`;
             } else if (clickedWalls.indexOf(id) === -1 && clickedWalls.indexOf(nextWall) === -1 && flag === false){
                 newClickedWalls.push(id);
                 newClickedSpaces.push(spaceId);
                 newClickedWalls.push(nextWall);
+                newMove = `h${String.fromCharCode(97 + col)}${9 - row-1}`;
             }else {
                 return;
             }
@@ -370,6 +400,7 @@ const GameLogic = (boardSize) => {
                 }),                
                 initialPlayer: prevState.initialPlayer === 'player1' ? 'player2' : 'player1',
                 highlightedSquares: [],
+                notations: [...notations, newMove],
             }));
         } else {          
             alert('Invalid wall placement! This move would block all paths to the goal.');

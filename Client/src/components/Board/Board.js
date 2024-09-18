@@ -10,7 +10,7 @@ const Board = (props) => {
     const rows = [];
 
         
-        const {highlightedSquares, players, hoveredWalls, clickedWalls, initialPlayer, clickedSpaces, hoveredSpaces } = state;
+        const {highlightedSquares, players, hoveredWalls, clickedWalls, initialPlayer, clickedSpaces, hoveredSpaces, playAs, nickNames, isThereComp } = state;
     
         for (let i = 0; i < boardSize; i++) {
             rows.push(
@@ -28,6 +28,9 @@ const Board = (props) => {
                 hoveredWalls={hoveredWalls}
                 clickedWalls={clickedWalls}
                 initialPlayer={initialPlayer}
+                playAs = {playAs}
+                nickNames = {nickNames}
+                isThereComp = {isThereComp}
             />
             );
     
@@ -42,7 +45,11 @@ const Board = (props) => {
                 hoveredWalls={hoveredWalls}
                 hoveredSpaces={hoveredSpaces}
                 clickedWalls={clickedWalls}
-                clickedSpaces={clickedSpaces} 
+                clickedSpaces={clickedSpaces}
+                initialPlayer = {initialPlayer}
+                playAs = {playAs} 
+                nickNames = {nickNames}
+                isThereComp = {isThereComp}
                 />
             );
             }

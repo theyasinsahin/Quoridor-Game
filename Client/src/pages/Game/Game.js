@@ -11,7 +11,7 @@ const Game = (props) => {
     const boardSize = 9;
     const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick } = GameLogic(boardSize);
 
-    const {players} = state;
+    const {players, notations, initialPlayer} = state;
     const render = () => {
         return (
             <div className='game-container'>
@@ -35,6 +35,29 @@ const Game = (props) => {
                         handleWallClick={handleWallClick}
                         boardSize={boardSize} 
                     />
+                    <div className="notation-section">
+                        <div className="notation-header">
+                            
+
+
+                        </div>
+                        <div className="notation-content">
+                            {notations.map((move, index) => {
+                                // Her iki elemanı bir grup olarak ele alıyoruz (örneğin: ["e2", "e8"])
+                                if (index % 2 === 0) {
+                                    return (
+                                        <div className="notation-move" key={index / 2}>
+                                            <span>{index / 2 + 1}.</span>
+                                            <span className="move">{notations[index]}</span>
+                                            <span className="move">{notations[index + 1]}</span>
+                                        </div>
+                                    );
+                                } else {
+                                    return null; // Tek eleman için bir şey döndürme (çiftli grup halinde işleniyor)
+                                }
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
 

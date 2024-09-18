@@ -1,0 +1,16 @@
+.column-label {
+    position: absolute;
+    bottom: 0;
+    left: 5px;
+    font-size: 18px;
+    color: #EEEED2;
+}
+  
+.row-label {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    font-size: 18px;
+    color: #EEEED2;
+}
+  
