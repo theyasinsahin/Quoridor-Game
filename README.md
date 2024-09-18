@@ -19,7 +19,6 @@ The game offers three different modes for players:
 3. **Against Bot:** Play against a simpler bot for a relaxed gameplay experience.
 
 ## Screenshots
-You can add some screenshots here to show the different game modes or the game interface.
 
 - **Main Menu**
   
