@@ -1,0 +1,18 @@
+type Mutation {
+    createDummyUser(name: String!, email: String!, password: String!, rating:Int!, country: String!): User!
+    deleteUser(input: deleteInput!): Message!
+    register(name: String!, email: String!, password: String!): AuthPayload!
+    login(email: String!, password: String!): AuthPayload!
+    sendFriendRequest(userId: ID!, friendId: ID!): Message!
+    acceptFriendRequest(userId: ID!, friendId: ID!): Message!
+    rejectFriendRequest(userId: ID!, friendId: ID!): Message!
+}
+
+input deleteInput {
+    id: ID!
+}
+
+type AuthPayload {
+    token: String!
+    user: User!
+}

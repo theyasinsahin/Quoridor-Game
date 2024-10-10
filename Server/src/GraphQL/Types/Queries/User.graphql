@@ -1,0 +1,29 @@
+scalar JSON
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    rating: Float!
+    country: String!
+    friends: [User]
+}
+
+type Message {
+    response: String!
+    statusCode: Int!
+}
+
+type FriendRequest {
+  from: User!
+  status: String!
+}
+
+type Query {
+    users: [User!]!
+    me: User!
+    userFriends(userId: ID!): [User]
+    friendRequests(userId: ID!): [FriendRequest!]
+    userInfos(userId: ID!): User!
+}
+

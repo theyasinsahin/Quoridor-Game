@@ -1,97 +1,10 @@
+import { bfs } from '../../hooks/BFS/BfsLogic';
+import { isValidMove, isWallBlockingMove, findBestWall } from '../../hooks/GameLogic/someLogics';
+import { TreeNode } from './TreeNode';
+
 const _ = require('lodash');  // CommonJS (Node.js)
 
-
 const BOARD_SIZE = 9;
-
-class TreeNode {
-    constructor(move, parent, uctConst){
-        this.numWins = 0;
-        this.numSims = 0;
-        this.children = [];
-        this.isTerminal = false;
-        this.parent = parent;
-        this.move = move;
-        this.uctConst = uctConst;
-    }
-
-
-    get isLeaf() {
-        return this.children.length === 0;
-    }
-
-    get isNew() {
-        return this.numSims === 0;
-    }
-
-    // References: 
-    // Levente Kocsis, Csaba Szepesva ́ri (2006 ) "Bandit based Monte-Carlo Planning"
-    // Peter Auer, Cesa-Bianchi, Fischer (2002) "Finite-time Analysis of the Multiarmed Bandit Problem"
-    // Do google search for "monte carlo tree search uct"
-    get uct() {
-        if (this.parent === null || this.parent.numSims === 0) {
-            throw "UCT_ERROR"
-        }
-        if (this.numSims === 0) {
-            return Infinity;
-        }
-        return (this.numWins / this.numSims) + Math.sqrt((this.uctConst * Math.log(this.parent.numSims)) / this.numSims);
-    }
-
-    get winRate() {
-        return this.numWins / this.numSims;
-    }
-
-    get maxUCTChild() {
-        let maxUCTIndices;
-        let maxUCT = -Infinity;
-        for (let i = 0; i < this.children.length; i++) {
-            const uct = this.children[i].uct;
-            if (uct > maxUCT) {
-                maxUCT = uct;
-                maxUCTIndices = [i];  
-            } else if (uct === maxUCT) {
-                maxUCTIndices.push(i);
-            }
-        }
-        const maxUCTIndex = randomChoice(maxUCTIndices);
-        //const maxUCTIndex = maxUCTIndices[0];
-        return this.children[maxUCTIndex];
-    }
-
-    get maxWinRateChild(){
-        let maxWinRateChildIdx;
-        let maxWinRate = -Infinity;
-        for (let i = 0; i < this.children.length; i++) {
-            if(maxWinRate < this.children[i].winRate){
-                maxWinRate = this.children[i].winRate;
-                maxWinRateChildIdx = i;
-            }
-        }
-        return this.children[maxWinRateChildIdx];
-    }
-
-    get maxSimsChild(){
-        let maxSimsChildIdx;
-        let maxSims = -Infinity;
-        for (let i = 0; i < this.children.length; i++) {
-            if(maxSims < this.children[i].numSims){
-                maxSims = this.children[i].numSims;
-                maxSimsChildIdx = i;
-            }
-        }
-        return this.children[maxSimsChildIdx];
-    }
-
-    addChild(childNode){
-        this.children.push(childNode);
-    }
-
-    printChildren() {
-        for (let i = 0; i < this.children.length; i++) {
-            console.log(`children[${i}].move: ${this.children[i].move}`);
-        }
-    }
-}
 
 class MonteCarloTreeSearch{
     constructor(state, uctConst){
@@ -162,8 +75,7 @@ class MonteCarloTreeSearch{
         if((simulationGame.players[0].position.row === simulationGame.players[0].goalRow) || simulationGame.players[1].position.row === simulationGame.players[1].goalRow){
             node.isTerminal = true;
         }
-
-        
+  
         while(!((simulationGame.players[0].position.row === simulationGame.players[0].goalRow) || (simulationGame.players[1].position.row === simulationGame.players[1].goalRow))){
             const moves = getPossibleMoveActions(simulationGame);
 
@@ -623,135 +535,6 @@ const reconstructPathForAllPaths = (previous, start, goal) => {
 };
 
 
-/////////////////  BFS ALGORITHM /////////////////////////
-const bfs = (start, goalRow, boardSize, walls) => {
-    const directions = [
-        { row: -1, col: 0 }, // up
-        { row: 1, col: 0 },  // down
-        { row: 0, col: -1 }, // left
-        { row: 0, col: 1 }   // right
-    ];
-
-    const queue = [start];
-    const visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
-    const previous = {}; // Object to store previous positions
-    visited[start.row][start.col] = true;
-
-    while (queue.length > 0) {
-        const { row, col } = queue.shift();
-
-        if (row === goalRow) {
-            return reconstructPath(previous, start, { row, col }); // Reconstruct the path
-        }
-
-        for (const direction of directions) {
-            const newRow = row + direction.row;
-            const newCol = col + direction.col;
-            
-            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize && !visited[newRow][newCol]) {
-                if (!isWallBlockingMove(row, col, newRow, newCol, walls) && isValidMove(row, col, newRow, newCol, walls)) {
-                    queue.push({ row: newRow, col: newCol });
-                    visited[newRow][newCol] = true;
-                    previous[`${newRow},${newCol}`] = { row, col }; // Track the path
-                }
-            }
-        }
-    }
-
-    return []; // Return empty array if no path found
-};
-
-// Function to reconstruct the path
-const reconstructPath = (previous, start, goal) => {
-    const path = [];
-    let current = goal;
-
-    while (current) {
-        path.unshift(current); // Add current position to the beginning of the path
-        current = previous[`${current.row},${current.col}`]; // Move to the previous position
-    }
-
-    return path; // Return the reconstructed path
-};
-
-////////////// VALID MOVES
-const isWallBlockingMove = (row, col, newRow, newCol, walls) => {
-    // Check vertical walls
-
-    if (newRow > row) {
-        return walls.includes(`hwall-${row}-${col}`);
-    } else if (newRow < row) {
-        return walls.includes(`hwall-${newRow}-${col}`);
-    }
-    // Check horizontal walls
-    if (newCol > col) {
-        return walls.includes(`vwall-${row}-${col}`);
-    } else if (newCol < col) {
-        return walls.includes(`vwall-${row}-${newCol}`);
-    }
-    return false;
-};
-
-// Check if the move is valid (not through a wall)
-const isValidMove = (currentRow, currentCol, targetRow, targetCol, clickedWalls) => {
-
-    // Moving vertically
-    if (currentRow !== targetRow && currentCol === targetCol) {
-        const step = currentRow < targetRow ? 1 : -1;
-        for (let i = currentRow; i !== targetRow; i += step) {
-            const wallId = step === 1 ? `hwall-${i}-${currentCol}` : `hwall-${i-1}-${currentCol}`;
-            if (clickedWalls.includes(wallId)) return false;
-        }
-    }
-
-    // Moving horizontally
-    if (currentCol !== targetCol && currentRow === targetRow) {
-        const step = currentCol < targetCol ? 1 : -1;
-        for (let i = currentCol; i !== targetCol; i += step) {
-            const wallId = step === 1 ? `vwall-${currentRow}-${i}` : `vwall-${currentRow}-${i-1}`;
-            if (clickedWalls.includes(wallId)) return false;
-        }
-    }
-
-    return true;
-};
-
-const findBestWall = (player, players, playerWay, possibleWallActions, clickedWalls) => {
-    let bestWall = null;
-    let maxExtension = 0;
-
-    possibleWallActions.forEach(wall => {
-        const id = wall.id;
-        const rowCol = id.split('-');
-        const direction = rowCol[0][0];
-        const row = parseInt(rowCol[1]);
-        const col = parseInt(rowCol[2]);
-
-        let newId;
-        if (direction === "v") {
-            newId = `vwall-${row + 1}-${col}`;
-        } else if (direction === "h") {
-            newId = `hwall-${row}-${col + 1}`;
-        }
-
-        clickedWalls.push(id, newId);
-
-        if (isValidWallPlacement(players, clickedWalls, bfs)) {
-            const extendedPath = simulateWallEffect(player, clickedWalls, bfs);
-            const extension = extendedPath.length - playerWay.length;
-
-            if (extension > maxExtension) {
-                maxExtension = extension;
-                bestWall = wall;
-            }
-        }
-
-        clickedWalls.pop();
-        clickedWalls.pop();
-    });
-
-    return bestWall;
-};
 
 const findAllBestWalls = (player, players, playerWay, possibleWallActions, clickedWalls) => {
     let AllBestWalls = [];

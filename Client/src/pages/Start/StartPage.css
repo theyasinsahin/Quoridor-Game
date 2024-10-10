@@ -147,3 +147,134 @@ button[type="submit"]:active {
     color: rgb(255, 225, 173);
 }
 
+
+.logo {
+    width: 400px;
+    height: auto;
+    margin-top: 50px;
+    margin-bottom: -100px;
+}
+
+
+/* Flexbox container to align content and table side by side */
+.content-wrapper {
+    display: flex;
+    justify-content: space-between; /* Pushes content apart */
+    align-items: flex-start; /* Align items to the top */
+  }
+  
+  /* Content will take up 65% of the width */
+  .content {
+    flex: 0 0 65%;
+    padding-right: 20px;
+  }
+  
+  /* High rating table will take up 30% of the width */
+  .high-rating-table {
+    
+    flex: 0 0 30%;
+    margin: 100px;
+  }
+  
+  /* Style for the table */
+  .high-rating-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .high-rating-table th, .high-rating-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+
+  .high-rating-table-title {
+    font-size: 30px;
+    
+  }
+  
+  .high-rating-table th {
+    background-color: rgb(115, 115, 115);
+  }
+  
+  .high-rating-table td {
+    text-align: center;
+  }
+
+  .see-all {
+    background-color: transparent;
+    font-size: 24px;
+    color: rgb(115, 115, 115);
+  }
+  .see-all:hover {
+    color:rgb(252, 242, 230);
+  }
+
+  .logout {
+    font-size: 20px;
+    color: rgb(255, 225, 173);
+    
+  }
+  .logout:hover{
+    color: black;
+  }
+  
+
+  /* Styles for the search box container */
+.search-box-container {
+  position: fixed; /* Ensure it's fixed on the page */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the box */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Transparent background */
+  width: 100vw;
+  height: 100vh; /* Full screen cover */
+  z-index: 1000; /* Ensure it's on top */
+}
+
+/* Styles for the search box itself */
+.search-box {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Box shadow to give it a message-box feel */
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Input styles */
+.search-box input {
+  width: 80%;
+  padding: 8px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Button styles */
+.search-box button {
+  padding: 8px 12px;
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Button hover effect */
+.search-box button:hover {
+  background-color: darkgreen;
+}
+
+.friends-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.friends-list li {
+  margin: 10px 0;
+  font-weight: bold;
+}

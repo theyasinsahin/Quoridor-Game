@@ -1,0 +1,82 @@
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height:fit-content;
+    background-color: rgb(243, 235, 235);
+    padding: 150px;
+    border-radius: 20px;
+
+    /* Add shadow to the container */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* Horizontal offset, vertical offset, blur radius, spread, color */
+  }
+
+  .to-register-text {
+    background-color: transparent;
+    border-color: transparent;
+    color: rgb(34, 34, 161);
+    width: 300px;
+    text-align: center;
+    font-size: 16px;
+    margin-top: -25px;
+  }
+  .to-register-text:hover {
+    background-color:transparent;
+    color: rgb(34, 34, 161);
+    text-decoration: underline;
+    border-color:transparent;
+  }
+  
+  .login-logo {
+    width: 400px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+  
+  .login-title {
+    font-size: 70px;
+    margin-bottom: 20px;
+    margin-top: -250px;
+  }
+
+  .login-label {
+    font-size: 28px;
+  }
+  
+  .login-error {
+    color: red;
+    margin-bottom: 10px;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+  }
+  
+  .login-field {
+    margin-bottom: 15px;
+  }
+  
+  .login-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 24px;
+  }
+  
+  .login-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .login-button:disabled {
+    background-color: #ccc;
+  }
+  

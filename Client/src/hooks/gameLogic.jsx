@@ -32,13 +32,13 @@ const GameLogic = (boardSize) => {
     });
 
     useEffect(() => {
-        const player1Way = bfs(state.players[0].position, state.players[0].goalRow, boardSize, state.clickedWalls, state.players);
-        const player2Way = bfs(state.players[1].position, state.players[1].goalRow, boardSize, state.clickedWalls, state.players);
+        const player1Way = aStar(state.players[0].position, state.players[0].goalRow, boardSize, state.clickedWalls, state.players);
+        const player2Way = aStar(state.players[1].position, state.players[1].goalRow, boardSize, state.clickedWalls, state.players);
 
         const {players, initialPlayer, clickedWalls} = state;
         const currentPlayer = players.find((player) => player.name === initialPlayer);
         const newHighlightedSquares = getPossibleMoveActions(currentPlayer.position.row, currentPlayer.position.col, state.players, clickedWalls);
-
+        
         setState((prevState) => ({
             ...prevState,
             players: [
@@ -159,44 +159,62 @@ const GameLogic = (boardSize) => {
     };
 
    
-    /////////////////  BFS ALGORITHM /////////////////////////
-    const bfs = (start, goalRow, boardSize, walls, players) => {
-        const directions = [
-            { row: -1, col: 0 }, // up
-            { row: 1, col: 0 },  // down
-            { row: 0, col: -1 }, // left
-            { row: 0, col: 1 }   // right
-        ];
+    //////
+    //  A* ALGORITHM
+    //////
+    const heuristic = (current, goalRow) => {
+        return Math.abs(current.row - goalRow);
+    };
     
-        const queue = [start];
+    const aStar = (start, goalRow, boardSize, walls, players) => {
+        const openSet = [start];
         const visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
-        const previous = {}; // Object to store previous positions
-        visited[start.row][start.col] = true;
+        const previous = {}; // To store the path
+        const gScore = Array.from({ length: boardSize }, () => Array(boardSize).fill(Infinity));
+        const fScore = Array.from({ length: boardSize }, () => Array(boardSize).fill(Infinity));
     
-        while (queue.length > 0) {
-            const { row, col } = queue.shift();
+        gScore[start.row][start.col] = 0;
+        fScore[start.row][start.col] = heuristic(start, goalRow);
+    
+        while (openSet.length > 0) {
+            // Find the node with the lowest fScore
+            openSet.sort((a, b) => fScore[a.row][a.col] - fScore[b.row][b.col]);
+            const current = openSet.shift();
+    
+            const { row, col } = current;
     
             if (row === goalRow) {
-                return reconstructPath(previous, start, { row, col }); // Reconstruct the path
+                return reconstructPath(previous, start, { row, col }); // Path found
             }
     
+            visited[row][col] = true;
+            
             const possibleMoves = getPossibleMoveActions(row, col, players, walls);
             
             for (const move of possibleMoves) {
                 const newRow = move.row;
                 const newCol = move.col;
-
-                if (!visited[newRow][newCol]) {
-                                      
-                    queue.push({ row: newRow, col: newCol });
-                    visited[newRow][newCol] = true;
-                    previous[`${newRow},${newCol}`] = { row, col }; // Track the path
+    
+                if (visited[newRow][newCol]) continue; // Skip already visited nodes
+    
+                const tentativeGScore = gScore[row][col] + 1; // Each move has a cost of 1
+                
+                if (tentativeGScore < gScore[newRow][newCol]) {
+                    // This path is better
+                    previous[`${newRow},${newCol}`] = { row, col };
+                    gScore[newRow][newCol] = tentativeGScore;
+                    fScore[newRow][newCol] = gScore[newRow][newCol] + heuristic({ row: newRow, col: newCol }, goalRow);
+    
+                    if (!openSet.some(pos => pos.row === newRow && pos.col === newCol)) {
+                        openSet.push({ row: newRow, col: newCol });
+                    }
                 }
-            } 
+            }
         }
     
-        return []; // Return empty array if no path found
+        return []; // No path found
     };
+    
     
     // Function to reconstruct the path
     const reconstructPath = (previous, start, goal) => {
@@ -302,8 +320,8 @@ const GameLogic = (boardSize) => {
             }
         });
 
-        const player1Dist = bfs(newPlayers[0].position, newPlayers[0].goalRow, boardSize, state.clickedWalls, newPlayers);
-        const player2Dist = bfs(newPlayers[1].position, newPlayers[1].goalRow, boardSize, state.clickedWalls, newPlayers);
+        const player1Dist = aStar(newPlayers[0].position, newPlayers[0].goalRow, boardSize, state.clickedWalls, newPlayers);
+        const player2Dist = aStar(newPlayers[1].position, newPlayers[1].goalRow, boardSize, state.clickedWalls, newPlayers);
 
         newPlayers[0].shortestWay = player1Dist;
         newPlayers[1].shortestWay = player2Dist;
@@ -378,10 +396,11 @@ const GameLogic = (boardSize) => {
         const player1Start = players.find(player => player.name === 'player1').position;
         const player2Start = players.find(player => player.name === 'player2').position;
     
-        const player1Dist = bfs(player1Start, 0, boardSize, newClickedWalls, state.players);
-        const player2Dist = bfs(player2Start, 8, boardSize, newClickedWalls, state.players);
+        const player1Way = aStar(player1Start, 0, boardSize, newClickedWalls, state.players);
+        const player2Way = aStar(player2Start, 8, boardSize, newClickedWalls, state.players);
 
-        if (player1Dist.length!==0 && player2Dist.length!==0) {
+    
+        if (player1Way.length!==0 && player2Way.length!==0) {
             setState((prevState) => ({
                 ...prevState,
                 clickedWalls: newClickedWalls,
@@ -393,9 +412,9 @@ const GameLogic = (boardSize) => {
                     
                     // Update shortestWay based on the index
                     if (index === 0) {
-                        return { ...updatedPlayer, shortestWay: player1Dist };
+                        return { ...updatedPlayer, shortestWay: player1Way };
                     } else if (index === 1) {
-                        return { ...updatedPlayer, shortestWay: player2Dist };
+                        return { ...updatedPlayer, shortestWay: player2Way };
                     }
                 }),                
                 initialPlayer: prevState.initialPlayer === 'player1' ? 'player2' : 'player1',
@@ -405,6 +424,8 @@ const GameLogic = (boardSize) => {
         } else {          
             alert('Invalid wall placement! This move would block all paths to the goal.');
         }
+
+        
     };
     
     
@@ -595,7 +616,7 @@ const GameLogic = (boardSize) => {
         movePlayer,
         handleWallHover,
         handleWallClick,
-        bfs,
+        aStar,
         isValidMove,
         isWallBlockingMove,
         getPossibleActions,

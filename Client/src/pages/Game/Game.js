@@ -1,6 +1,6 @@
 import React from 'react';
-import Board from '../../components/Board/Board';
-import WallsLeft from '../../components/WallsLeft/WallsLeft';
+import Board from '../../components/GameComponents/Board/Board';
+import WallsLeft from '../../components/GameComponents/WallsLeft/WallsLeft';
 import GameLogic from '../../hooks/gameLogic';
 import './Game.css';
 import { useLocation } from 'react-router-dom';
