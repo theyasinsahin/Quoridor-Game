@@ -1,17 +1,40 @@
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import Board from '../../components/GameComponents/Board/Board';
 import WallsLeft from '../../components/GameComponents/WallsLeft/WallsLeft';
 import GameLogic from '../../hooks/gameLogic';
 import './Game.css';
 import { useLocation } from 'react-router-dom';
+import Notation from '../../components/GameComponents/Notation/Notation';
+import CopyButton from '../../components/CopyButton/CopyButton';
+import { socket } from '../../Socket';
 
 const Game = (props) => {
     const location = useLocation();
-
+    const {playerId, playerRole} = location.state;
     const boardSize = 9;
-    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick } = GameLogic(boardSize);
+    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick, getHistoryStateAt, undo, toMainMenu } = GameLogic(boardSize);
 
-    const {players, notations, initialPlayer} = state;
+
+    useEffect(() => {
+        if (location.state.mode === 'Online') {
+            socket.on('receive-move', (actionData) => {
+                const {action, playerRole} = actionData;
+                // Update the board with the received move
+                if(action.type === "move"){
+                    movePlayer(action.row, action.col);
+                }else{     
+                    handleWallClick(action.id, action.orientation, false);
+                }
+            });
+    
+            return () => {
+                socket.off('receive-move');
+            };
+        }
+    }, []);
+    
+
+    const {players, initialPlayer, notations} = state;
     const render = () => {
         return (
             <div className='game-container'>
@@ -27,36 +50,29 @@ const Game = (props) => {
                             <WallsLeft wallsLeft={players.find(player => player.name === 'player1').wallsLeft} player="player1s" />
                         </div>
                     </div>
-                    <Board 
-                        state={state}
-                        handlePlayerClick={handlePlayerClick}
-                        movePlayer={movePlayer} 
-                        handleWallHover={handleWallHover}
-                        handleWallClick={handleWallClick}
-                        boardSize={boardSize} 
-                    />
+                    <div>
+                        <button onClick={undo} className='undo-button'>Undo</button>
+                        <button onClick={toMainMenu} className='undo-button'>Back To Main Menu</button>
+                        <CopyButton  notations={notations}/>
+                        <Board 
+                            state={state}
+                            handlePlayerClick={handlePlayerClick}
+                            movePlayer={movePlayer} 
+                            handleWallHover={handleWallHover}
+                            handleWallClick={handleWallClick}
+                            boardSize={boardSize} 
+                            playerId = {playerId}
+                            playerRole = {playerRole}
+                        />
+                    </div>
+                    
                     <div className="notation-section">
                         <div className="notation-header">
                             
 
-
                         </div>
-                        <div className="notation-content">
-                            {notations.map((move, index) => {
-                                // Her iki elemanı bir grup olarak ele alıyoruz (örneğin: ["e2", "e8"])
-                                if (index % 2 === 0) {
-                                    return (
-                                        <div className="notation-move" key={index / 2}>
-                                            <span>{index / 2 + 1}.</span>
-                                            <span className="move">{notations[index]}</span>
-                                            <span className="move">{notations[index + 1]}</span>
-                                        </div>
-                                    );
-                                } else {
-                                    return null; // Tek eleman için bir şey döndürme (çiftli grup halinde işleniyor)
-                                }
-                            })}
-                        </div>
+                        
+                        <Notation notations={notations} getHistoryStateAt={getHistoryStateAt}/>
                     </div>
                 </div>
             </div>

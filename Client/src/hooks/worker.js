@@ -15,7 +15,7 @@ onmessage = async function(event) {
         action = actionCalculate(event.data);
     }else if(event.data.nickNames[nickNameIdx] === 'AI'){
         try {
-            const ai = new AI(1000, 1.5, true);
+            const ai = new AI(500, 1.5, true);
             action = ai.chooseNextMove(event.data);
         } catch (error) {
             console.error("Error in AI calculation:", error);

@@ -16,7 +16,9 @@ const Row = (props) => {
     clickedWalls,
     initialPlayer,
     playAs,
-    nickNames
+    nickNames,
+    playerId,
+    playerRole,
   } = props;
   const row = [];
 
@@ -41,6 +43,8 @@ const Row = (props) => {
         movePlayer={movePlayer}
         initialPlayer={initialPlayer}
         boardSize={boardSize}
+        playerId = {playerId}
+        playerRole = {playerRole}
       />
     );
 
@@ -58,6 +62,8 @@ const Row = (props) => {
           initialPlayer={initialPlayer}
           playAs = {playAs}
           nickNames = {nickNames}
+          playerId = {playerId}
+          playerRole = {playerRole}
         />
       );
     }

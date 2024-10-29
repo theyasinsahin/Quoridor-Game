@@ -1,9 +1,11 @@
 import { bfs } from "../../hooks/BFS/BfsLogic";
+import { aStar } from "../../hooks/AStar";
 import { findBestWall } from "../../hooks/GameLogic/someLogics";
 
 
 const actionCalculate = (state) => {
     const boardSize = 9;
+    const {players, initialPlayer } = state;
     const player1 = state.players[0];
     const player2 = state.players[1];
     const possibleWallActions = state.possibleActions.putWall;
@@ -24,7 +26,7 @@ const actionCalculate = (state) => {
             possibleMoveActions.forEach(possibleMoveAction => {
                 // Simulate the move
                 const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length;
+                const newDistance = aStar(newPosition, player2.goalRow, boardSize, clickedWalls, players, initialPlayer).length;
     
                 if (newDistance < shortestDistance) {
                     shortestDistance = newDistance;
@@ -33,7 +35,7 @@ const actionCalculate = (state) => {
             });
             return { type: "move", col: bestAction.col, row: bestAction.row };
         } else {
-            const bestWall = findBestWall(player1, state.players, player1Way, possibleWallActions, clickedWalls, bfs);
+            const bestWall = findBestWall(player1, players, player1Way, possibleWallActions, clickedWalls, aStar);
             if (bestWall) {
                 return { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
             } else {
@@ -43,7 +45,7 @@ const actionCalculate = (state) => {
                 possibleMoveActions.forEach(possibleMoveAction => {
                     // Simulate the move
                     const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                    const newDistance = bfs(newPosition, player2.goalRow, boardSize, clickedWalls).length;
+                    const newDistance = aStar(newPosition, player2.goalRow, boardSize, clickedWalls, players, initialPlayer).length;
     
                     if (newDistance < shortestDistance) {
                         shortestDistance = newDistance;
@@ -60,7 +62,7 @@ const actionCalculate = (state) => {
             possibleMoveActions.forEach(possibleMoveAction => {
                 // Simulate the move
                 const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                const newDistance = bfs(newPosition, player1.goalRow, boardSize, clickedWalls).length;
+                const newDistance = aStar(newPosition, player1.goalRow, boardSize, clickedWalls, players, initialPlayer).length;
     
                 if (newDistance < shortestDistance) {
                     shortestDistance = newDistance;
@@ -69,7 +71,7 @@ const actionCalculate = (state) => {
             });
             return { type: "move", col: bestAction.col, row: bestAction.row };
         } else {
-            const bestWall = findBestWall(player2, state.players, player2Way, possibleWallActions, clickedWalls, bfs);
+            const bestWall = findBestWall(player2, state.players, player2Way, possibleWallActions, clickedWalls, aStar);
             if (bestWall) {
                 return { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
             } else {
@@ -79,7 +81,7 @@ const actionCalculate = (state) => {
                 possibleMoveActions.forEach(possibleMoveAction => {
                     // Simulate the move
                     const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                    const newDistance = bfs(newPosition, player1.goalRow, boardSize, clickedWalls).length;
+                    const newDistance = aStar(newPosition, player1.goalRow, boardSize, clickedWalls, players, initialPlayer).length;
     
                     if (newDistance < shortestDistance) {
                         shortestDistance = newDistance;

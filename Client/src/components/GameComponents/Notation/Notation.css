@@ -1,0 +1,10 @@
+.move {
+    font-size: 20px;
+    margin: 5px;
+    background-color: transparent;
+}
+
+.notation-content {
+    max-height: 650px;
+    overflow-y: auto;  /* Yatay kaydırma için: overflow-x: auto; */
+}

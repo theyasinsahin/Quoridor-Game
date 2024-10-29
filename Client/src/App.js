@@ -1,17 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 
 import Game from './pages/Game/Game';
-import GameOver from './pages/GameOver/GameOver';
 import StartPage from './pages/Start/StartPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Profile from './pages/Profile/Profile';
 import HighRatingTablePage from './pages/HighRating/HighRatingPage';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-
-
+import WaitingPage from './pages/Game/WaitingPage';
 import './App.css';
 
 // Apollo Client Setup
@@ -23,7 +21,7 @@ const client = new ApolloClient({
   }
 });
 
-function App() {
+const App = () => {
   return (
     <ApolloProvider client={client}>
       <Router>
@@ -31,7 +29,7 @@ function App() {
             <Routes>
               <Route path="/" element={<ProtectedRoute> <StartPage /> </ProtectedRoute> } />
               <Route path="/game" element={<ProtectedRoute><Game /> </ProtectedRoute> } />
-              <Route path="/game-over" element={ <ProtectedRoute> <GameOver /></ProtectedRoute> } />
+              <Route path="/waiting-page" element={<ProtectedRoute><WaitingPage /> </ProtectedRoute> } />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/high-rating-table" element={<ProtectedRoute><HighRatingTablePage /> </ProtectedRoute>} />

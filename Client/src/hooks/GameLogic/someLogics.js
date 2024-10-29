@@ -19,7 +19,6 @@ export const isWallBlockingMove = (row, col, newRow, newCol, walls) => {
 
 // Check if the move is valid (not through a wall)
 export const isValidMove = (currentRow, currentCol, targetRow, targetCol, clickedWalls) => {
-
     // Moving vertically
     if (currentRow !== targetRow && currentCol === targetCol) {
         const step = currentRow < targetRow ? 1 : -1;

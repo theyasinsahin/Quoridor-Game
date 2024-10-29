@@ -5,7 +5,7 @@ import './Board.css';
 
 const Board = (props) => {
     
-    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick, boardSize } = props;
+    const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick, boardSize, playerId, playerRole } = props;
 
     const rows = [];
 
@@ -31,6 +31,8 @@ const Board = (props) => {
                 playAs = {playAs}
                 nickNames = {nickNames}
                 isThereComp = {isThereComp}
+                playerId = {playerId}
+                playerRole = {playerRole}
             />
             );
     

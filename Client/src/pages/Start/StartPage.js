@@ -8,6 +8,10 @@ import { GET_USER_FRIENDS, GET_USERS_FOR_RATING } from '../../graphql/queries';
 import FriendList from '../../components/FriendList/FriendList';
 import FriendRequestList from '../../components/FriendRequestsList/FriendRequestsList';
 
+
+import { socket } from '../../Socket';
+
+
 const StartPage = (props) => {
 
     const user = JSON.parse(localStorage.getItem('user'));
@@ -16,15 +20,15 @@ const StartPage = (props) => {
     const logout = useLogout();
 
     // Fetch friends using GraphQL query
-  const { dataFriends, loadingFriends, errorFriends } = useQuery(GET_USER_FRIENDS, {
-    variables: { userId: user.id },
-  });
+    const { dataFriends, loadingFriends, errorFriends } = useQuery(GET_USER_FRIENDS, {
+        variables: { userId: user.id },
+    });
 
-  useEffect(() => {
-    if (dataFriends && !loadingFriends && !errorFriends) {
-      setFriends(dataFriends.userFriends);
-    }
-  }, [dataFriends, loadingFriends, errorFriends]);
+    useEffect(() => {
+        if (dataFriends && !loadingFriends && !errorFriends) {
+        setFriends(dataFriends.userFriends);
+        }
+    }, [dataFriends, loadingFriends, errorFriends]);
 
     const [showSearchBox, setShowSearchBox] = useState(false);
     const [friendName, setFriendName] = useState('');
@@ -73,9 +77,46 @@ const StartPage = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+    
+        if (gameMode === 'Online') {
+            // Emit the join-room event without specifying a room ID
+            socket.emit('join-room', playerRole === 'player1' ? player1Name : player2Name);
+          
+            // Listen for room updates (when players join or leave)
+            socket.on('room-update', (players) => {
+                console.log('Players in room:', players);
+            });
 
-        navigate('/game', { state: { player1Name, player2Name, mode: gameMode, playerRole, isThereComp } });
+            // Show waiting message if only one player is in the room
+            socket.on('waiting', () => {
+                navigate('/waiting-page');
+            });
+    
+            // Start the game and receive player roles
+            socket.on('start-game', (players) => {
+                console.log("start-game: ",players);
+                const player1 = players.find(p => p.role === 'player1');
+                const player2 = players.find(p => p.role === 'player2');
+                console.log("player1: ", player1);
+                console.log("player2: ", player2);
+                // Navigate to game screen with assigned player roles
+                navigate('/game', { 
+                    state: { 
+                        player1Name: player1.id === socket.id ? player1.name : player2.name, 
+                        player2Name: player1.id === socket.id ? player2.name : player1.name, 
+                        mode: gameMode, 
+                        playerRole: player1.id === socket.id ? 'player1' : 'player2', 
+                        isThereComp,
+                        playerId: player1.id === socket.id ? player2.id : player1.id, 
+                    } 
+                });
+            });
+        }else{
+            navigate('/game', { state: { player1Name, player2Name, mode: gameMode, playerRole, isThereComp } });
+        }
     };
+    
+    
 
     
     
@@ -91,7 +132,6 @@ const StartPage = (props) => {
             if (selectedMode === 'AI' || selectedMode === 'Bot' || selectedMode==="Online") {
                 setPlayer2Name(selectedMode); // Set player2Name to 'AI' or 'Bot' when against AI or Bot mode is selected
             }
-        
         }
         console.log(friends);
     };
@@ -103,15 +143,12 @@ const StartPage = (props) => {
 
         {/* Flexbox Container to position content and table side by side */}
         <div className="content-wrapper">
+            
             <div className="content">
                 <form onSubmit={handleSubmit}>
-                    
-
                     <div>
                         <h2>Welcome {loggedInUser?.name}!</h2>
                     </div>
-
-
                     {(gameMode !== 'AI' && gameMode !== 'Bot' && gameMode !== 'Online') && (
                     <div>
                         <label>
@@ -128,6 +165,13 @@ const StartPage = (props) => {
                         style={{ backgroundColor: gameMode === '2Player' ? 'rgb(255, 221, 179)' : 'rgb(252, 242, 230)' }}
                     >
                         2 Player
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleModeClick('Online')}
+                        style={{ backgroundColor: gameMode === 'Online' ? 'rgb(255, 221, 179)' : 'rgb(252, 242, 230)' }}
+                    >
+                        Online
                     </button>
                     <button
                         type="button"

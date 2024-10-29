@@ -1,4 +1,4 @@
-import { bfs } from '../../hooks/BFS/BfsLogic';
+import { aStar } from '../../hooks/AStar';
 import { isValidMove, isWallBlockingMove, findBestWall } from '../../hooks/GameLogic/someLogics';
 import { TreeNode } from './TreeNode';
 
@@ -44,7 +44,7 @@ class MonteCarloTreeSearch{
                         currentNode.addChild(childNode);
                     }
                     const walls = getPossibleWallActions(simulationGame);
-                    const bestWalls = findAllBestWalls(opponentPlayer, simulationGame.players, bestPaths[0], walls, simulationGame.clickedWalls);
+                    const bestWalls = findAllBestWalls(opponentPlayer, simulationGame.players, bestPaths[0], walls, simulationGame.clickedWalls, simulationGame.initialPlayer);
                     if(currentPlayer.wallsLeft > 0){
                         for (let i = 0; i < bestWalls.length; i++) {
                             move = bestWalls[i];
@@ -83,8 +83,8 @@ class MonteCarloTreeSearch{
             const currentPlayer = simulationGame.initialPlayer === 'player1' ? simulationGame.players[0] : simulationGame.players[1];
             const opponentPlayer = simulationGame.initialPlayer === 'player1' ? simulationGame.players[1] : simulationGame.players[0];
             
-            const currentPlayerWay = bfs(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls)
-            const opponentPlayerWay = bfs(opponentPlayer.position, opponentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls)
+            const currentPlayerWay = aStar(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls, simulationGame.players, simulationGame.initialPlayer);
+            const opponentPlayerWay = aStar(opponentPlayer.position, opponentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls, simulationGame.players, simulationGame.initialPlayer);
             const currentPlayerDist = currentPlayer.length;
             const opponentPlayerDist = opponentPlayer.length;
             
@@ -95,7 +95,7 @@ class MonteCarloTreeSearch{
                 moves.forEach(possibleMoveAction => {
                     // Simulate the move
                     const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                    const newDistance = bfs(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls).length;
+                    const newDistance = aStar(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls, simulationGame.players, simulationGame.initialPlayer).length;
         
                     if (newDistance < shortestDistance) {
                         shortestDistance = newDistance;
@@ -105,7 +105,7 @@ class MonteCarloTreeSearch{
                 const action = { type: "move", col: bestAction.col, row: bestAction.row };
                 this.getAction(simulationGame, action);
             } else {
-                const bestWall = findBestWall(opponentPlayer, simulationGame.players, opponentPlayerWay, walls, simulationGame.clickedWalls, bfs);
+                const bestWall = findBestWall(opponentPlayer, simulationGame.players, opponentPlayerWay, walls, simulationGame.clickedWalls, aStar);
                 if (bestWall) {
                     const action = { type: "wall", orientation: bestWall.orientation, id: bestWall.id };
                     this.getAction(simulationGame, action);
@@ -116,7 +116,7 @@ class MonteCarloTreeSearch{
                     moves.forEach(possibleMoveAction => {
                         // Simulate the move
                         const newPosition = { row: possibleMoveAction.row, col: possibleMoveAction.col };
-                        const newDistance = bfs(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls).length;
+                        const newDistance = aStar(newPosition, currentPlayer.goalRow, BOARD_SIZE, simulationGame.clickedWalls, simulationGame.players, simulationGame.initialPlayer).length;
         
                         if (newDistance < shortestDistance) {
                             shortestDistance = newDistance;
@@ -225,15 +225,15 @@ class AI {
         const d0 = new Date();
         const currentPlayer = state.players.find((player) => player.name === state.initialPlayer);
         const opponentPlayer = state.players.find((player) => player.name !== state.initialPlayer);
-        const currentPlayerWay = bfs(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, state.clickedWalls);
+        const currentPlayerWay = aStar(currentPlayer.position, currentPlayer.goalRow, BOARD_SIZE, state.clickedWalls, state.players, state.initialPlayer);
 
-        const possibleWallActions = getPossibleWallActions(state);
+        //const possibleWallActions = getPossibleWallActions(state);
        
         // heuristic:
         // for first move of each pawn
         // make move to best option
         if(state.turn < 3){
-            const position = currentPlayer.shortestWay[1]; // Because shortestWay[0] is start position
+            const position = currentPlayerWay[1]; // Because shortestWay[0] is start position
 
             return {type: "move", row: position.row, col: position.col};
         }
@@ -262,11 +262,14 @@ class AI {
 
         // heuristic: if opponent's wall over and AI's path shorter than opponent, move to shortest way
         if(opponentPlayer.wallsLeft === 0 && currentPlayer.shortestWay < opponentPlayer.shortestWay){
-            const position = bfs(currentPlayer.position,currentPlayer.goalRow, BOARD_SIZE, state.clickedWalls)[1]; // Because shortestWay[0] is start position
+            const position = aStar(currentPlayer.position,currentPlayer.goalRow, BOARD_SIZE, state.clickedWalls, state.players, state.initialPlayer)[1]; // Because shortestWay[0] is start position
             return {type: "move", row: position.row, col: position.col};
         }
 
-
+        // heuristic: if possible, win
+        if(currentPlayerWay.length === 2){
+            return {type: "move", row: currentPlayerWay[1].row, col: currentPlayerWay[1].col};
+        }
 
 
         const mcts = new MonteCarloTreeSearch(state, this.uctConst);
@@ -411,7 +414,7 @@ const getPossibleMoveActions = (state) => {
 
 const getPossibleWallActions = (state) => {
     let player = state.players.find(player => player.name === state.initialPlayer);
-    const {clickedWalls, clickedSpaces} = state;
+    const {clickedWalls, clickedSpaces, players, initialPlayer} = state;
 
     const possibleWallActions = []; 
     // Generate possible wall actions 
@@ -427,7 +430,7 @@ const getPossibleWallActions = (state) => {
                 if (!clickedWalls.includes(vwallId) && !clickedWalls.includes(vBelowWallId) && !clickedSpaces.includes(spaceId)) {
                     clickedWalls.push(vwallId);
                     clickedWalls.push(vBelowWallId);
-                    if(bfs(player.position, player.goalRow, BOARD_SIZE, clickedWalls).length>0){
+                    if(aStar(player.position, player.goalRow, BOARD_SIZE, clickedWalls, players, initialPlayer).length>0){
                         possibleWallActions.push({ type: 'wall', id: vwallId, orientation: 'vertical' });
                     }
                     clickedWalls.pop();
@@ -437,7 +440,7 @@ const getPossibleWallActions = (state) => {
                 if (!clickedWalls.includes(hwallId) && !clickedWalls.includes(hNextWallId) && !clickedSpaces.includes(spaceId)) {
                     clickedWalls.push(hwallId);
                     clickedWalls.push(hNextWallId);
-                    if(bfs(player.position, player.goalRow, BOARD_SIZE, clickedWalls).length>0){
+                    if(aStar(player.position, player.goalRow, BOARD_SIZE, clickedWalls, players, initialPlayer).length>0){
                         possibleWallActions.push({ type: 'wall', id: hwallId, orientation: 'horizontal' });
                     }
                     clickedWalls.pop();
@@ -536,7 +539,7 @@ const reconstructPathForAllPaths = (previous, start, goal) => {
 
 
 
-const findAllBestWalls = (player, players, playerWay, possibleWallActions, clickedWalls) => {
+const findAllBestWalls = (player, players, playerWay, possibleWallActions, clickedWalls, initialPlayer) => {
     let AllBestWalls = [];
     let maxExtension = 0;
 
@@ -556,8 +559,8 @@ const findAllBestWalls = (player, players, playerWay, possibleWallActions, click
 
         clickedWalls.push(id, newId);
 
-        if (isValidWallPlacement(players, clickedWalls)) {
-            const extendedPath = simulateWallEffect(player, clickedWalls);
+        if (isValidWallPlacement(players, clickedWalls, initialPlayer)) {
+            const extendedPath = simulateWallEffect(player, clickedWalls, players, initialPlayer);
             const extension = extendedPath.length - playerWay.length;
 
             if (extension > maxExtension) {
@@ -580,21 +583,21 @@ const findAllBestWalls = (player, players, playerWay, possibleWallActions, click
     return AllBestWalls;
 };
 
-const simulateWallEffect = (player, walls) => {
+const simulateWallEffect = (player, walls, players, initialPlayer) => {
     // Simulate placing the wall and calculate the new shortest path for the opponent
     const start = player.position;
-    const newWay = bfs(start, player.goalRow, BOARD_SIZE, walls);
+    const newWay = aStar(start, player.goalRow, BOARD_SIZE, walls, players, initialPlayer);
 
     return newWay;
 };
 
-const isValidWallPlacement = (players, walls) => {
+const isValidWallPlacement = (players, walls, initialPlayer) => {
     const player1 = players[0];
     const player2 = players[1];
 
     // Check if both players have a valid path to their respective goals
-    const path1 = bfs(player1.position, player1.goalRow, BOARD_SIZE, walls);
-    const path2 = bfs(player2.position, player2.goalRow, BOARD_SIZE, walls);
+    const path1 = aStar(player1.position, player1.goalRow, BOARD_SIZE, walls, players, initialPlayer);
+    const path2 = aStar(player2.position, player2.goalRow, BOARD_SIZE, walls, players, initialPlayer);
 
     return path1.length > 0 && path2.length > 0;
 };

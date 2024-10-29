@@ -109,3 +109,7 @@ second color: rgb(115, 115, 115)
     border-radius: 4px;
     color: rgb(0, 0, 0);
 }
+
+.undo-button{
+    background-color: #EEEED2;
+}

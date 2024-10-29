@@ -1,9 +1,10 @@
 import React from 'react';
 import '../../../App';
+import { socket } from '../../../Socket';
 
 
 const Wall = (props) => {
-    const {orientation, isHovered, isClicked, id, onWallHover, onWallClick, playAs, initialPlayer, nickNames} = props;
+    const {orientation, isHovered, isClicked, id, onWallHover, onWallClick, playAs, initialPlayer, nickNames, playerId, playerRole} = props;
     
     
     const handleMouseEnter = () => {
@@ -20,6 +21,10 @@ const Wall = (props) => {
 
     const handleClick = () => {
         onWallClick(id, orientation, true);
+        
+        const action = {type: "wall", id:id, orientation: orientation};
+        // Emit the move to the server
+        socket.emit('player-move', playerId, {action, playerRole});
     }
 
     

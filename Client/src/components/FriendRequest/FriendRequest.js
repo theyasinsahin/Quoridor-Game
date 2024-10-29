@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { SEND_FRIEND_REQUEST } from '../../graphql/mutations';
+
 const SendFriendRequest = (props) => {
   const [friendName, setFriendName] = useState('');
   const [sendFriendRequest, { data, loading, error }] = useMutation(SEND_FRIEND_REQUEST);
