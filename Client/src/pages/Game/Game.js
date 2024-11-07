@@ -15,23 +15,26 @@ const Game = (props) => {
     const {state, handlePlayerClick, movePlayer, handleWallHover, handleWallClick, getHistoryStateAt, undo, toMainMenu } = GameLogic(boardSize);
 
 
+    
+
     useEffect(() => {
         if (location.state.mode === 'Online') {
-            socket.on('receive-move', (actionData) => {
-                const {action, playerRole} = actionData;
-                // Update the board with the received move
-                if(action.type === "move"){
-                    movePlayer(action.row, action.col);
-                }else{     
-                    handleWallClick(action.id, action.orientation, false);
+            const handleReceiveMove = (actionData) => {
+                const { action } = actionData;
+                if (action.type === 'move') {
+                  movePlayer(action.row, action.col);
+                } else {
+                  handleWallClick(action.id, action.orientation, false);
                 }
-            });
-    
-            return () => {
-                socket.off('receive-move');
-            };
+              };
+      
+          socket.on('receive-move', handleReceiveMove);
+      
+          return () => {
+            socket.off('receive-move', handleReceiveMove);
+          };
         }
-    }, []);
+      }, [movePlayer, handleWallClick]);
     
 
     const {players, initialPlayer, notations} = state;

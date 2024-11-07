@@ -19,27 +19,9 @@ export const isWallBlockingMove = (row, col, newRow, newCol, walls) => {
 
 // Check if the move is valid (not through a wall)
 export const isValidMove = (currentRow, currentCol, targetRow, targetCol, clickedWalls) => {
-    // Moving vertically
-    if (currentRow !== targetRow && currentCol === targetCol) {
-        const step = currentRow < targetRow ? 1 : -1;
-        for (let i = currentRow; i !== targetRow; i += step) {
-            const wallId = step === 1 ? `hwall-${i}-${currentCol}` : `hwall-${i-1}-${currentCol}`;
-            if (clickedWalls.includes(wallId)) return false;
-        }
-    }
-
-    // Moving horizontally
-    if (currentCol !== targetCol && currentRow === targetRow) {
-        const step = currentCol < targetCol ? 1 : -1;
-        for (let i = currentCol; i !== targetCol; i += step) {
-            const wallId = step === 1 ? `vwall-${currentRow}-${i}` : `vwall-${currentRow}-${i-1}`;
-            if (clickedWalls.includes(wallId)) return false;
-        }
-    }
-
-    return true;
+    return !clickedWalls.some(wallId => wallId.startsWith(`hwall-${Math.min(currentRow, targetRow)}-${currentCol}`) ||
+                                         wallId.startsWith(`vwall-${currentRow}-${Math.min(currentCol, targetCol)}`));
 };
-
 export const findBestWall = (player, players, playerWay, possibleWallActions, clickedWalls) => {
     let bestWall = null;
     let maxExtension = 0;

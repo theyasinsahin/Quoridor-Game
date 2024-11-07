@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { aStar, reconstructPath, aStarAllPaths } from "./AStar";
@@ -48,10 +48,8 @@ const GameLogic = (boardSize) => {
         const {players, initialPlayer, clickedWalls, nickNames, playAs} = state;
         const currentPlayer = players.find((player) => player.name === initialPlayer);
 
-        console.log(mode, initialPlayer, playAs);
-        if((mode !== "AI" || mode !== "Bot" || mode !== "Online") && initialPlayer === playAs){
+        if(((mode !== "AI" || mode !== "Bot" || mode !== "Online") && initialPlayer === playAs) || mode=== '2Player'){
             const newHighlightedSquares = getPossibleMoveActions(currentPlayer.position.row, currentPlayer.position.col, state.players, clickedWalls);
-            console.log("ben buraya girdim");
             setState((prevState) => ({
                 ...prevState,
                 highlightedSquares: newHighlightedSquares,
@@ -226,81 +224,77 @@ const GameLogic = (boardSize) => {
         }      
     };
     
+const movePlayer = useCallback((rowIndex, colIndex) => {
+    if (!canItMove) return;
 
-    const movePlayer = (rowIndex, colIndex) => {
-        if(canItMove){
-            const { players, initialPlayer, nickNames, notations } = state;
-            const currentPlayer = players.find((player) => player.name === initialPlayer);
-            //console.log(initialPlayer);
-            const currentRow = currentPlayer.position.row;
-            const currentCol = currentPlayer.position.col;
-    
-            if (!isValidMove(currentRow, currentCol, rowIndex, colIndex)) {
-                alert("Cannot move through walls!");
-                return;
-            }
-    
-            const newMove = `${String.fromCharCode(97 + colIndex)}${9 - rowIndex}`;
-    
-    
-            const newPlayers = players.map((player, index) => {
-                const updatedPlayer = player.name === initialPlayer 
-                    ? { ...player, position: { row: rowIndex, col: colIndex } } 
-                    : player;
-                
-                // Update shortestWay based on the index
-                if (index === 0) {
-                    return updatedPlayer;
-                } else if (index === 1) {
-                    return updatedPlayer;
-                }
-            });
-    
-            const player1Dist = aStar(newPlayers[0].position, newPlayers[0].goalRow, boardSize, state.clickedWalls, newPlayers, state.initialPlayer);
-            const player2Dist = aStar(newPlayers[1].position, newPlayers[1].goalRow, boardSize, state.clickedWalls, newPlayers, state.initialPlayer);
-    
-            newPlayers[0].shortestWay = player1Dist;
-            newPlayers[1].shortestWay = player2Dist;
-    
-            const nextPlayer = initialPlayer === 'player1' ? 'player2' : 'player1';
+    const { players, initialPlayer, nickNames, notations } = state;
+    const currentPlayer = players.find(player => player.name === initialPlayer);
+    const { row: currentRow, col: currentCol } = currentPlayer.position;
 
-            // Save the current game state before updating
-            const newState = {
-                playAs: state.playAs,
-                nickNames: state.nickNames,
-                highlightedSquares: [],
-                players: newPlayers,
-                initialPlayer: nextPlayer,
-                turn: state.turn + 1,
-                hoveredWalls: [],
-                hoveredSpaces: [],
-                clickedWalls: [...state.clickedWalls],
-                clickedSpaces: [...state.clickedSpaces],
-                possibleActions: {...state.possibleActions},
-                notations: [...notations, newMove],
-            };
-    
-            setState((prevState) => ({
-                ...newState,
-                history: [...prevState.history, newState], // <-- Save this state to history
-            }));
+    if (!isValidMove(currentRow, currentCol, rowIndex, colIndex)) {
+        alert("Cannot move through walls!");
+        return;
+    }
 
-            
+    const newMove = `${String.fromCharCode(97 + colIndex)}${9 - rowIndex}`;
+    const updatedPlayers = updatePlayerPosition(players, initialPlayer, rowIndex, colIndex);
     
-            if (initialPlayer === 'player1' && rowIndex === 0) {
-                const message = nickNames[0]+ " won";
-                isGameOver = true;
-                alert(message);                
-                canItMove = false;
-            }
-            if (initialPlayer === 'player2' && rowIndex === 8) {
-                const message = nickNames[1]+ " won";
-                isGameOver = true;
-                alert(message);
-                canItMove = false;
-            }
-        }
+    updateShortestPaths(updatedPlayers);
+
+    const nextPlayer = initialPlayer === 'player1' ? 'player2' : 'player1';
+    const newState = createNewState(updatedPlayers, nextPlayer, newMove, notations);
+
+    setState(prevState => ({
+        ...newState,
+        history: [...prevState.history, newState],
+    }));
+
+    checkForWin(rowIndex, initialPlayer, nickNames);
+}, [state]);
+
+const updatePlayerPosition = (players, playerName, rowIndex, colIndex) => {
+    const updatedPlayers = players.map(player => 
+        player.name === playerName 
+            ? { ...player, position: { row: rowIndex, col: colIndex } }
+            : player
+    );
+    console.log(updatedPlayers);
+    return updatedPlayers;
+};
+
+const updateShortestPaths = (players) => {
+    players.forEach((player, index) => {
+        const distance = aStar(player.position, player.goalRow, boardSize, state.clickedWalls, players, state.initialPlayer);
+        players[index].shortestWay = distance;
+    });
+};
+
+const createNewState = (players, nextPlayer, newMove, notations) => {
+    return {
+        playAs: state.playAs,
+        nickNames: state.nickNames,
+        highlightedSquares: [],
+        players,
+        initialPlayer: nextPlayer,
+        turn: state.turn + 1,
+        hoveredWalls: [],
+        hoveredSpaces: [],
+        clickedWalls: [...state.clickedWalls],
+        clickedSpaces: [...state.clickedSpaces],
+        possibleActions: { ...state.possibleActions },
+        notations: [...notations, newMove],
     };
+};
+
+const checkForWin = (rowIndex, currentPlayer, nickNames) => {
+    if ((currentPlayer === 'player1' && rowIndex === 0) || 
+        (currentPlayer === 'player2' && rowIndex === 8)) {
+        const message = `${nickNames[currentPlayer === 'player1' ? 0 : 1]} won`;
+        isGameOver = true;
+        alert(message);
+        canItMove = false;
+    }
+};
 
     const toMainMenu = () => {
         navigate('/');
@@ -319,7 +313,7 @@ const GameLogic = (boardSize) => {
         return JSON.stringify(obj1Clone) === JSON.stringify(obj2Clone);
       }
     
-    const handleWallClick = (id, orientation, flag) => {
+    const handleWallClick = useCallback((id, orientation, flag) => {
         if(canItMove){
             const { players, clickedWalls, hoveredWalls, initialPlayer, clickedSpaces, notations } = state;
             const newClickedWalls = [...clickedWalls];
@@ -411,7 +405,7 @@ const GameLogic = (boardSize) => {
                 alert('Invalid wall placement! This move would block all paths to the goal.');
             }
         }   
-    };
+    }, []);
     
     
     //////////////////////// HOVER EVENTS ///////////////////////////
