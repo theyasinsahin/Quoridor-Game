@@ -55,7 +55,7 @@ To install and run the project locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/quoridor-game.git
+   git clone https://github.com/theyasinsahin/Quoridor-Game.git
 Navigate to the project directory:
   ```bash
   cd quoridor-game
