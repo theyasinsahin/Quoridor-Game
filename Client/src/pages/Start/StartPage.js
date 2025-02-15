@@ -138,8 +138,7 @@ const StartPage = (props) => {
 
     return (
         <div className="container">
-        <h1 className='title'>Quoridor Game</h1>
-        <img src="/images/quoridor-logo-removebg.png" alt="Quoridor Logo" className="logo" />
+        {/*<img src="/images/quoridor-logo-removebg.png" alt="Quoridor Logo" className="logo" />*/}
 
         {/* Flexbox Container to position content and table side by side */}
         <div className="content-wrapper">

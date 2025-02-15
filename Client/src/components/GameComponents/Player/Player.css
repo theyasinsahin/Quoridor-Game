@@ -1,6 +1,6 @@
 .player1, .player2 {
-    height: 35px;
-    width: 35px;
+    height: 22px;
+    width: 22px;
     border-radius: 50%;
   
     position: absolute;
@@ -18,5 +18,5 @@
   }
   
   .player1.turn, .player2.turn{
-    border: 5px solid rgb(125, 125, 125)  ;
+    border: 3px solid rgb(125, 125, 125)  ;
   }

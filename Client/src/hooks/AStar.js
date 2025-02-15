@@ -67,6 +67,8 @@ export const reconstructPath = (previous, goal) => {
     return path; // Return the reconstructed path
 };
 
+
+
 const getPossibleMoveActions = (rowIndex, colIndex, players, clickedWalls, initialPlayer) => {
     
     const boardSize = 9;
@@ -94,7 +96,7 @@ const getPossibleMoveActions = (rowIndex, colIndex, players, clickedWalls, initi
                         addToPossibleMoveArray(rowIndex - 1, colIndex + 1); // Right of the adjacent player
                 }
             } else {
-                if(!isWallBlockingMove()){
+                if (!isWallBlockingMove(rowIndex, colIndex, rowIndex - 1, colIndex, clickedWalls)) {
                     addToPossibleMoveArray(rowIndex - 1, colIndex);
                 }
             }

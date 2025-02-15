@@ -10,6 +10,7 @@ import Profile from './pages/Profile/Profile';
 import HighRatingTablePage from './pages/HighRating/HighRatingPage';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import WaitingPage from './pages/Game/WaitingPage';
+import LandingPage from './components/LandingPage';
 import './App.css';
 
 // Apollo Client Setup
@@ -27,7 +28,8 @@ const App = () => {
       <Router>
         <div className="App">
             <Routes>
-              <Route path="/" element={<ProtectedRoute> <StartPage /> </ProtectedRoute> } />
+              <Route path="/" element={<ProtectedRoute> <LandingPage /> </ProtectedRoute> } />
+              <Route path="/start" element={<ProtectedRoute> <StartPage /> </ProtectedRoute> } />
               <Route path="/game" element={<ProtectedRoute><Game /> </ProtectedRoute> } />
               <Route path="/waiting-page" element={<ProtectedRoute><WaitingPage /> </ProtectedRoute> } />
               <Route path="/login" element={<Login />} />

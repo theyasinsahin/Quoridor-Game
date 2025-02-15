@@ -1,0 +1,119 @@
+
+  .play-button {
+    background: #769656;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 1em;
+  }
+  
+  .play-button:hover {
+    transform: translateY(-2px);
+    background: #769656;
+    box-shadow: 0 5px 15px #769650;
+    color: white;
+  }
+
+  /* Navbar.css */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem;
+  background-color: rgba(51, 51, 51, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  border-bottom: 2px solid #769656;
+}
+
+.nav-left .logo {
+  color: white;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  height: 80px;
+  width: auto;
+  margin-top: -2em;
+}
+
+.logo:hover {
+  transform: translateY(-2px);
+}
+
+.download-icon {
+  font-size: 1.2rem;
+}
+
+.nav-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+
+
+.nav-link {
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #769656;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.nav-link.active {
+  color: #769656;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem 3%;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .nav-right {
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.7rem;
+  }
+  
+  .logo {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}

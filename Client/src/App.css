@@ -6,19 +6,19 @@ second color: rgb(115, 115, 115)
 
 .App{
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 50px;
+  width: 100%;
 }
 
 .Square {
-  height: 60px;
-  width: 60px;
-  min-height: 60px; /* Minimum yükseklik */
-  min-width: 60px;  /* Minimum genişlik */
-  max-height: 60px; /* Maksimum yükseklik */
-  max-width: 60px;  /* Maksimum genişlik */
+  height: 40px;
+  width: 40px;
+  min-height: 40px; /* Minimum yükseklik */
+  min-width: 40px;  /* Minimum genişlik */
+  max-height: 40px; /* Maksimum yükseklik */
+  max-width: 40px;  /* Maksimum genişlik */
   background-color: #769656;
   position: relative;
 }
@@ -28,22 +28,22 @@ second color: rgb(115, 115, 115)
 }
 
 .Wall.horizontal {
-  height: 6px;
-  width: 60px;
-  min-height: 6px; /* Minimum yükseklik */
-  min-width: 60px;  /* Minimum genişlik */
-  max-height: 6px; /* Maksimum yükseklik */
-  max-width: 60px;  /* Maksimum genişlik */
+  height: 4px;
+  width: 40px;
+  min-height: 4px; /* Minimum yükseklik */
+  min-width: 40px;  /* Minimum genişlik */
+  max-height: 4px; /* Maksimum yükseklik */
+  max-width: 40px;  /* Maksimum genişlik */
   background-color: #EEEED2;
 }
 
 .Wall.vertical {
-  height: 60px;
-  width: 6px;
-  min-height: 60px; /* Minimum yükseklik */
-  min-width: 6px;  /* Minimum genişlik */
-  max-height: 60px; /* Maksimum yükseklik */
-  max-width: 6px;  /* Maksimum genişlik */
+  height: 40px;
+  width: 4px;
+  min-height: 40px; /* Minimum yükseklik */
+  min-width: 4px;  /* Minimum genişlik */
+  max-height: 40px; /* Maksimum yükseklik */
+  max-width: 4px;  /* Maksimum genişlik */
   background-color: #EEEED2;
 }
 
@@ -56,30 +56,30 @@ second color: rgb(115, 115, 115)
 }
 
 .Space {
-  height: 10px;
-  width: 10px;
-  min-height: 10px; /* Minimum yükseklik */
-  min-width: 10px;  /* Minimum genişlik */
-  max-height: 10px; /* Maksimum yükseklik */
-  max-width: 10px;  /* Maksimum genişlik */
+  height: 6.8px;
+  width: 6.8px;
+  min-height: 6.8px; /* Minimum yükseklik */
+  min-width: 6.8px;  /* Minimum genişlik */
+  max-height: 6.8px; /* Maksimum yükseklik */
+  max-width: 6.8px;  /* Maksimum genişlik */
   background-color: #EEEED2;
 }
 .Space.clicked{
-  height: 10px;
-  width: 10px;
-  min-height: 10px; /* Minimum yükseklik */
-  min-width: 10px;  /* Minimum genişlik */
-  max-height: 10px; /* Maksimum yükseklik */
-  max-width: 10px;  /* Maksimum genişlik */
+  height: 6.8px;
+  width: 6.8px;
+  min-height: 6.8px; /* Minimum yükseklik */
+  min-width: 6.8px;  /* Minimum genişlik */
+  max-height: 6.8px; /* Maksimum yükseklik */
+  max-width: 6.8px;  /* Maksimum genişlik */
   background-color: black;
 }
 .Space.hovered{
-  height: 10px;
-  width: 10px;
-  min-height: 10px; /* Minimum yükseklik */
-  min-width: 10px;  /* Minimum genişlik */
-  max-height: 10px; /* Maksimum yükseklik */
-  max-width: 10px;  /* Maksimum genişlik */
+  height: 6.8px;
+  width: 6.8px;
+  min-height: 6.8px; /* Minimum yükseklik */
+  min-width: 6.8px;  /* Minimum genişlik */
+  max-height: 6.8px; /* Maksimum yükseklik */
+  max-width: 6.8px;  /* Maksimum genişlik */
   background-color: rgb(68, 68, 68);
 }
 

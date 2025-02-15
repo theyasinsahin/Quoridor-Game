@@ -55,7 +55,8 @@ const GameLogic = (boardSize) => {
                 highlightedSquares: newHighlightedSquares,
             }))
         }
-        
+        console.log(aStar(currentPlayer.position, currentPlayer.goalRow, boardSize, clickedWalls, players, initialPlayer));
+        console.log(clickedWalls);
     }, [state.initialPlayer])
 
 
@@ -258,7 +259,6 @@ const updatePlayerPosition = (players, playerName, rowIndex, colIndex) => {
             ? { ...player, position: { row: rowIndex, col: colIndex } }
             : player
     );
-    console.log(updatedPlayers);
     return updatedPlayers;
 };
 
@@ -369,6 +369,8 @@ const checkForWin = (rowIndex, currentPlayer, nickNames) => {
             const player1Way = aStar(player1Start, 0, boardSize, newClickedWalls, state.players, state.initialPlayer);
             const player2Way = aStar(player2Start, 8, boardSize, newClickedWalls, state.players, state.initialPlayer);
     
+            console.log("player1'in yolu: ",player1Way.length);
+            console.log("player2'nin yolu: ",player2Way.length);
             if (player1Way.length!==0 && player2Way.length!==0) {
 
                 const newState = {
@@ -405,7 +407,7 @@ const checkForWin = (rowIndex, currentPlayer, nickNames) => {
                 alert('Invalid wall placement! This move would block all paths to the goal.');
             }
         }   
-    }, []);
+    }, [state]);
     
     
     //////////////////////// HOVER EVENTS ///////////////////////////
